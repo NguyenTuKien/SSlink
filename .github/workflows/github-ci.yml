@@ -157,14 +157,16 @@ jobs:
           # Ghi nội dung secret vào file .env
           echo "${{ secrets.ENV_FILE }}" > .env
           
-          # Nối thêm biến TAG vào file .env cho docker-compose đọc
+          # Nối thêm biến TAG và REGISTRY cho docker-compose đọc
           echo "TAG=$TAG" >> .env
+          echo "BACKEND_VERSION=$TAG" >> .env
+          echo "DOCKER_REGISTRY=$REGISTRY_IMAGE" >> .env
 
       # Tương đương phần đầu của script
       - name: Start services with Docker Compose
         run: |
           docker compose pull
-          docker compose up -d
+          docker compose up -d --no-build
           
       # Chờ và in log
       - name: Wait and Check Logs

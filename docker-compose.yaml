@@ -18,7 +18,7 @@ services:
   
   backend:
     build: ./backend
-    image: ngtukien218/sslink-backend:${BACKEND_VERSION:-latest}
+    image: ${DOCKER_REGISTRY:-ngtukien218}/backend:${BACKEND_VERSION:-latest}
     restart: always
     ports:
       - "8080:8080"
