@@ -111,11 +111,6 @@ jobs:
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
-      - name: Build and Push Frontend
-        run: |
-          docker pull $REGISTRY_IMAGE/frontend:$TAG || true
-          docker build --cache-from $REGISTRY_IMAGE/frontend:$TAG -t $REGISTRY_IMAGE/frontend:$TAG ./frontend
-          docker push $REGISTRY_IMAGE/frontend:$TAG
       - name: Build and Push Backend
         run: |
           docker pull $REGISTRY_IMAGE/backend:$TAG || true
@@ -176,7 +171,6 @@ jobs:
         run: |
           sleep 20
           docker compose ps
-          docker compose logs --tail=200 frontend || true
           docker compose logs --tail=200 backend || true
 
       # Chạy kiểm tra Healthcheck
@@ -226,13 +220,6 @@ jobs:
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: '${{ env.REGISTRY_IMAGE }}/backend:${{ env.TAG }}'
-          severity: 'HIGH,CRITICAL'
-          exit-code: '0'
-          
-      - name: Run Trivy vulnerability scanner - Frontend Image
-        uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: '${{ env.REGISTRY_IMAGE }}/frontend:${{ env.TAG }}'
           severity: 'HIGH,CRITICAL'
           exit-code: '0'
 
