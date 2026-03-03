@@ -113,9 +113,9 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
       - name: Build and Push Backend
         run: |
-          docker pull $REGISTRY_IMAGE/backend:$TAG || true
-          docker build --cache-from $REGISTRY_IMAGE/backend:$TAG -t $REGISTRY_IMAGE/backend:$TAG ./backend
-          docker push $REGISTRY_IMAGE/backend:$TAG
+          docker pull $REGISTRY_IMAGE/sslink-backend:$TAG || true
+          docker build --cache-from $REGISTRY_IMAGE/sslink-backend:$TAG -t $REGISTRY_IMAGE/sslink-backend:$TAG ./backend
+          docker push $REGISTRY_IMAGE/sslink-backend:$TAG
       - name: Cleanup Docker System
         if: always() 
         run: docker system prune -af
@@ -221,7 +221,7 @@ jobs:
       - name: Run Trivy vulnerability scanner - Backend Image
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: '${{ env.REGISTRY_IMAGE }}/backend:${{ env.TAG }}'
+          image-ref: '${{ env.REGISTRY_IMAGE }}/sslink-backend:${{ env.TAG }}'
           severity: 'HIGH,CRITICAL'
           exit-code: '0'
 
