@@ -185,37 +185,32 @@ jobs:
   code_quality_scan:
     runs-on: ubuntu-latest
     needs: [unit_test_job]
-    continue-on-error: true  
     steps:
       - name: Checkout source code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Download JaCoCo Coverage Report & Classes
+      - name: Set up JDK 21 # Cần Java để chạy Maven
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Download JaCoCo Report # Chỉ cần tải file XML báo cáo, không cần cả thư mục classes
         uses: actions/download-artifact@v4
         with:
           name: jacoco-coverage-report
-          path: ./backend
+          path: backend/target/site/jacoco/
 
-      - name: Kiểm tra cấu thực tế (Debug)
+      - name: Run SonarCloud Scan with Maven
+        working-directory: ./backend
         run: |
-          echo "--- Danh sách file đang có tại gốc ---"
-          ls -R | grep "target/classes" || echo "Không tìm thấy target/classes ở cấu trúc mặc định"
-
-      - name: Run SonarCloud Code Quality Scan
-        uses: SonarSource/sonarqube-scan-action@v5.0.0 
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }} 
-        with:
-          projectBaseDir: './backend'
-          args: >
-            -Dsonar.organization=${{ vars.SONAR_ORGANIZATION }}
-            -Dsonar.projectKey=${{ vars.SONAR_PROJECT_KEY }}
-            -Dsonar.sources=src/main/java
-            -Dsonar.java.binaries=target/classes
-            -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
-            -Dsonar.verbose=true
+          mvn sonar:sonar \
+            -Dsonar.projectKey=${{ vars.SONAR_PROJECT_KEY }} \
+            -Dsonar.organization=${{ vars.SONAR_ORGANIZATION }} \
+            -Dsonar.host.url=https://sonarcloud.io \
+            -Dsonar.token=${{ secrets.SONAR_TOKEN }}
 
   security_scan:
     runs-on: ubuntu-latest
