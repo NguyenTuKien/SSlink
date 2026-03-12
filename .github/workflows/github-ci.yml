@@ -246,28 +246,40 @@ jobs:
           severity: 'HIGH,CRITICAL'
           exit-code: '0'
 
-  notify_success:
+  notify_github:
     runs-on: ubuntu-latest
     needs: [unit_test_job, tag_job, build_job, integration_test_job, code_quality_scan, security_scan]
-    if: >
-      success() &&
-      (github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/main')
+    if: always() && (github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/main')
     steps:
-      - name: Send Discord Notification - Success
-        run: |
-          curl -H "Content-Type: application/json" \
-          -d "{\"content\": \"✅ **DEPLOY SUCCESS!** 🚀\\n**Project:** ${{ github.repository }}\\n**Branch:** ${{ github.ref_name }}\\n**User:** ${{ github.actor }}\\n**Status:** 🟢 Thành công\\n👉 [Xem Pipeline](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})\"}" \
-          ${{ secrets.DISCORD_WEBHOOK_URL }}
+      - name: Notify on GitHub
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const status = '${{ job.status }}' === 'success' ? '✅ **DEPLOY SUCCESS!** 🚀' : '🚨 **PIPELINE FAILED!** 💥';
+            const color = '${{ job.status }}' === 'success' ? '🟢 Thành công' : '🔴 Thất bại';
+            
+            // Danh sách các user bạn muốn tag (thay bằng username thật)
+            const collaborators = "@NguyenTuKien"; 
 
-  notify_fail:
-    runs-on: ubuntu-latest
-    needs: [unit_test_job, tag_job, build_job, integration_test_job, code_quality_scan, security_scan]
-    if: >
-      failure() &&
-      (github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/main')
-    steps:
-      - name: Send Discord Notification - Failed
-        run: |
-          curl -H "Content-Type: application/json" \
-          -d "{\"content\": \"🚨 **PIPELINE FAILED!** 💥\\n**Project:** ${{ github.repository }}\\n**Branch:** ${{ github.ref_name }}\\n**User:** ${{ github.actor }}\\n**Status:** 🔴 Thất bại\\n👉 [Xem lỗi tại đây](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})\"}" \
-          ${{ secrets.DISCORD_WEBHOOK_URL }}
+            const body = `
+            ${status}
+            **Project:** ${{ github.repository }}
+            **Branch:** ${{ github.ref_name }}
+            **Actor:** @${{ github.actor }}
+            **Status:** ${color}
+            **Mention:** ${collaborators}
+            👉 [Xem chi tiết Pipeline](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+            `;
+
+            // Nếu là Pull Request, comment vào PR đó
+            if (context.issue.number) {
+              github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: body
+              });
+            } else {
+              // Nếu không có PR (push trực tiếp), tạo một Issue mới hoặc log vào một Issue chỉ định
+              console.log("Không tìm thấy PR, nội dung thông báo: " + body);
+            }

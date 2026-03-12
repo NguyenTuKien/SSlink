@@ -1,4 +1,4 @@
-package ct01.sslink.backend;
+package ct01.unipoint.backend;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
