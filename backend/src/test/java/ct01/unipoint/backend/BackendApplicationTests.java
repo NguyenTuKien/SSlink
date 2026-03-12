@@ -1,4 +1,4 @@
-package ct01.sslink.backend;
+package ct01.unipoint.backend;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
