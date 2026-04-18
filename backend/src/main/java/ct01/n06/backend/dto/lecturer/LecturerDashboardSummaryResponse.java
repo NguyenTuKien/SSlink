@@ -4,6 +4,7 @@ import java.util.List;
 
 public record LecturerDashboardSummaryResponse(
     long totalEvents,
+    long totalStudents,
     long participatingStudents,
     long pendingEvidence,
     long newNotifications,

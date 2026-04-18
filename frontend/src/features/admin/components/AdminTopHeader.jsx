@@ -17,9 +17,6 @@
       <div className="flex items-center gap-3 md:gap-4">
         <div className="hidden gap-2 md:flex">
           <button className="flex items-center justify-center rounded-lg h-10 w-10 bg-primary/10 text-primary hover:bg-primary hover:text-white transition-colors" type="button">
-            <span className="material-symbols-outlined">notifications</span>
-          </button>
-          <button className="flex items-center justify-center rounded-lg h-10 w-10 bg-primary/10 text-primary hover:bg-primary hover:text-white transition-colors" type="button">
             <span className="material-symbols-outlined">settings</span>
           </button>
         </div>

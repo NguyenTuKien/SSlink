@@ -5,14 +5,11 @@
         <div className="size-8 flex items-center justify-center bg-primary rounded-lg text-white">
           <span className="material-symbols-outlined">school</span>
         </div>
-        <h2 className="text-slate-900 dark:text-slate-100 text-lg font-bold leading-tight tracking-tight">Điểm rèn luyện</h2>
+        <h2 className="text-slate-900 dark:text-slate-100 text-lg font-bold leading-tight tracking-tight">UniPoint</h2>
       </div>
 
       <div className="flex flex-1 justify-end gap-4 items-center">
         <div className="hidden md:flex gap-2">
-          <button className="flex items-center justify-center rounded-lg h-10 w-10 bg-primary/10 text-primary hover:bg-primary hover:text-white transition-colors" type="button">
-            <span className="material-symbols-outlined">notifications</span>
-          </button>
           <button className="flex items-center justify-center rounded-lg h-10 w-10 bg-primary/10 text-primary hover:bg-primary hover:text-white transition-colors" type="button">
             <span className="material-symbols-outlined">settings</span>
           </button>

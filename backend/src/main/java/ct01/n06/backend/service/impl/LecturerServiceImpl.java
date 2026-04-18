@@ -139,6 +139,7 @@ public class LecturerServiceImpl implements LecturerService {
     Optional<SemesterEntity> activeSemesterOpt = semesterRepository.findFirstByIsActiveTrueOrderByStartDateDesc();
 
     long totalEvents = eventRepository.countByCreatedBy_Id(currentUserId);
+    long totalStudents = students.size();
     long participatingStudents = 0;
     long pendingEvidence = 0;
 
@@ -170,6 +171,7 @@ public class LecturerServiceImpl implements LecturerService {
 
     return new LecturerDashboardSummaryResponse(
         totalEvents,
+      totalStudents,
         participatingStudents,
         pendingEvidence,
         newNotifications,

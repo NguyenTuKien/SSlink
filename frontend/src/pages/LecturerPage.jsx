@@ -36,6 +36,7 @@ export default function LecturerPage() {
   const [dashboardSummaryLoading, setDashboardSummaryLoading] = useState(true);
   const [dashboardSummary, setDashboardSummary] = useState({
     totalEvents: 0,
+    totalStudents: 0,
     participatingStudents: 0,
     pendingEvidence: 0,
     newNotifications: 0,
@@ -56,6 +57,7 @@ export default function LecturerPage() {
         if (!ignore && data) {
           setDashboardSummary({
             totalEvents: data.totalEvents || 0,
+            totalStudents: data.totalStudents || 0,
             participatingStudents: data.participatingStudents || 0,
             pendingEvidence: data.pendingEvidence || 0,
             newNotifications: Number(data.newNotifications || 0),
