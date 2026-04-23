@@ -86,7 +86,6 @@ async fn stop_ble_advertising(state: State<'_, BleAdvertisingState>) -> Result<(
 
 fn main() {
     tauri::Builder::default()
-        .plugin(tauri_plugin_notification::init())
         .manage(BleAdvertisingState(Mutex::new(None)))
         .invoke_handler(tauri::generate_handler![
             start_ble_advertising,
