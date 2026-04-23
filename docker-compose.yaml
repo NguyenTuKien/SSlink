@@ -2,24 +2,38 @@ services:
   database:
     image: postgres:alpine
     restart: always
+    ports:
+      - "5432:5432"
     volumes:
       - pg_data:/var/lib/postgresql
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-mydatabase}
+      POSTGRES_USER: ${POSTGRES_USER:-myuser}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-mypassword}
     healthcheck:
-      test: ["CMD", "pg_isready", "-h", "localhost"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-myuser} -d ${POSTGRES_DB:-mydatabase} -h localhost"]
       interval: 10s
       timeout: 5s
       retries: 5
     networks:
       - ttcs
-
+  
   redis:
     image: redis:7-alpine
     restart: always
+    ports:
+       - "6379:6379"
     volumes:
       - redis_data:/data
+<<<<<<< HEAD
     entrypoint: ["sh", "-c", "redis-server --appendonly yes --requirepass \"$$REDIS_PASSWORD\""]
     healthcheck:
       test: ["CMD-SHELL", "redis-cli --no-auth-warning -a \"$$REDIS_PASSWORD\" ping | grep PONG"]
+=======
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a ${REDIS_PASSWORD} ping | grep PONG"]
+>>>>>>> parent of 2fdc209 (Update)
       interval: 10s
       timeout: 5s
       retries: 5
@@ -29,7 +43,12 @@ services:
   rabbitmq:
     image: rabbitmq:3.12-management-alpine
     restart: always
-    env_file: .env
+    ports:
+      - "5672:5672"    # Cổng AMQP
+      - "15672:15672"  # Cổng UI Management
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
     healthcheck:
@@ -42,8 +61,21 @@ services:
 
   backend:
     build: ./backend
-    image: ttcs-backend:latest
+    image: ${DOCKER_REGISTRY:-ngtukien218}/ttcs-backend:${TAG:-latest}
     restart: always
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    environment:
+      POSTGRES_HOST: database
+      POSTGRES_PORT: 5432
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      APP_SEEDER_ENABLED: true
+
     depends_on:
       database:
         condition: service_healthy
@@ -52,7 +84,7 @@ services:
       rabbitmq:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/api/actuator/health | grep UP"]
+      test: [ "CMD-SHELL", "wget -qO- http://localhost:8080/api/actuator/health | grep UP" ]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -66,8 +98,10 @@ services:
       context: ./frontend
       args:
         - VITE_API_PROXY_TARGET=http://backend:8080
-    image: ttcs-frontend:latest
+    image: ${DOCKER_REGISTRY:-ngtukien218}/ttcs-frontend:${TAG:-latest}
     restart: always
+    ports:
+      - "80:80"
     depends_on:
       backend:
         condition: service_healthy
@@ -77,7 +111,9 @@ services:
   cloudflare:
     image: cloudflare/cloudflared:2026.3.0
     restart: always
-    command: tunnel --no-autoupdate run --token ${TUNNEL_TOKEN}
+    command: tunnel --no-autoupdate run --token ${CLOUDFLARE_TUNNEL_TOKEN}
+    # depends_on:
+    #   - frontend
     networks:
       - ttcs
 
@@ -90,3 +126,6 @@ volumes:
 networks:
   ttcs:
     driver: bridge
+  
+
+

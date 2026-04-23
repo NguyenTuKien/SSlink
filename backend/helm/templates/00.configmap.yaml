@@ -6,32 +6,29 @@ metadata:
     {{- include "helm.labels" . | nindent 4 }}
 data:
   SPRING_PROFILES_ACTIVE: "{{ .Values.backend.environment.SPRING_PROFILES_ACTIVE }}"
-  # Datasource
-  SPRING_DATASOURCE_URL: "{{ .Values.backend.environment.SPRING_DATASOURCE_URL }}"
-  SPRING_DATASOURCE_USERNAME: "{{ .Values.backend.environment.SPRING_DATASOURCE_USERNAME }}"
+  # Postgres
+  POSTGRES_HOST: "{{ .Values.backend.environment.POSTGRES_HOST }}"
+  POSTGRES_PORT: "{{ .Values.backend.environment.POSTGRES_PORT }}"
+  POSTGRES_DB: "{{ .Values.backend.environment.POSTGRES_DB }}"
+  POSTGRES_USER: "{{ .Values.backend.environment.POSTGRES_USER }}"
   # Redis
-  SPRING_DATA_REDIS_HOST: "{{ .Values.backend.environment.SPRING_DATA_REDIS_HOST }}"
-  SPRING_DATA_REDIS_PORT: "{{ .Values.backend.environment.SPRING_DATA_REDIS_PORT }}"
+  REDIS_HOST: "{{ .Values.backend.environment.REDIS_HOST }}"
+  REDIS_PORT: "{{ .Values.backend.environment.REDIS_PORT }}"
   # RabbitMQ
-  SPRING_RABBITMQ_HOST: "{{ .Values.backend.environment.SPRING_RABBITMQ_HOST }}"
-  SPRING_RABBITMQ_PORT: "{{ .Values.backend.environment.SPRING_RABBITMQ_PORT }}"
-  SPRING_RABBITMQ_USERNAME: "{{ .Values.backend.environment.SPRING_RABBITMQ_USERNAME }}"
-  SPRING_RABBITMQ_VIRTUAL_HOST: "{{ .Values.backend.environment.SPRING_RABBITMQ_VIRTUAL_HOST }}"
-  SPRING_RABBITMQ_SSL_ENABLED: "{{ .Values.backend.environment.SPRING_RABBITMQ_SSL_ENABLED }}"
-  # Mail
-  SPRING_MAIL_HOST: "{{ .Values.backend.environment.SPRING_MAIL_HOST }}"
-  SPRING_MAIL_PORT: "{{ .Values.backend.environment.SPRING_MAIL_PORT }}"
-  SPRING_MAIL_USERNAME: "{{ .Values.backend.environment.SPRING_MAIL_USERNAME }}"
-  # App
+  RABBITMQ_HOST: "{{ .Values.backend.environment.RABBITMQ_HOST }}"
+  RABBITMQ_PORT: "{{ .Values.backend.environment.RABBITMQ_PORT }}"
+  RABBITMQ_USERNAME: "{{ .Values.backend.environment.RABBITMQ_USERNAME }}"
+  RABBITMQ_VIRTUAL_HOST: "{{ .Values.backend.environment.RABBITMQ_VIRTUAL_HOST }}"
+  RABBITMQ_SSL_ENABLED: "{{ .Values.backend.environment.RABBITMQ_SSL_ENABLED }}"
+  # CORS
   CORS_ALLOWED_ORIGINS: "{{ .Values.backend.environment.CORS_ALLOWED_ORIGINS }}"
-  SPRING_APP_SEEDER_ENABLED: "{{ .Values.backend.environment.SPRING_APP_SEEDER_ENABLED }}"
-  # OAuth2
-  SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_MICROSOFT_REDIRECT_URI: "{{ .Values.backend.environment.SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_MICROSOFT_REDIRECT_URI }}"
-  SPRING_APP_OAUTH2_REDIRECT_URL: "{{ .Values.backend.environment.SPRING_APP_OAUTH2_REDIRECT_URL }}"
-  # Device
-  DEVICE_SECURITY_COOKIE_NAME: "{{ .Values.backend.environment.DEVICE_SECURITY_COOKIE_NAME }}"
-  DEVICE_SECURITY_COOKIE_SECURE: "{{ .Values.backend.environment.DEVICE_SECURITY_COOKIE_SECURE }}"
+  APP_SEEDER_ENABLED: "{{ .Values.backend.environment.APP_SEEDER_ENABLED }}"
+  # OAuth2 & Device
+  OAUTH2_REDIRECT_URL: "{{ .Values.backend.environment.OAUTH2_REDIRECT_URL }}"
+  OAUTH2_REDIRECT_URI: "{{ .Values.backend.environment.OAUTH2_REDIRECT_URI }}"
+  DEVICE_COOKIE_NAME: "{{ .Values.backend.environment.DEVICE_COOKIE_NAME }}"
+  DEVICE_COOKIE_SECURE: "{{ .Values.backend.environment.DEVICE_COOKIE_SECURE }}"
   DEVICE_BINDING_TTL_MS: "{{ .Values.backend.environment.DEVICE_BINDING_TTL_MS }}"
-  # JWT
   JWT_EXPIRATION_MS: "{{ .Values.backend.environment.JWT_EXPIRATION_MS }}"
   JWT_REFRESH_EXPIRATION_MS: "{{ .Values.backend.environment.JWT_REFRESH_EXPIRATION_MS }}"
+  MAIL_USERNAME: "{{ .Values.backend.environment.MAIL_USERNAME }}"
