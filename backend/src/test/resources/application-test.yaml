@@ -18,25 +18,6 @@ spring:
   rabbitmq:
     host: localhost
     port: 5672
-
-# Dummy secrets for test context loading
-jwt:
-  secret: "dummy_secret_for_unit_tests_must_be_at_least_32_chars_long"
-  expiration-ms: 3600000
-  refresh-expiration-ms: 86400000
-
-device:
-  security:
-    cookie-name: device_token
-    cookie-secure: false
-    hmac-secret: "dummy_hmac_secret_for_unit_tests_32_chars"
-  binding:
-    ttl-ms: 604800000
-
-cors:
-  allowed-origins: "*"
-
-spring:
   mail:
     host: localhost
     port: 25
@@ -54,3 +35,19 @@ spring:
       redirect:
         url: http://localhost:3000/oauth-success
 
+# Dummy secrets for test context loading
+jwt:
+  secret: "dummy_secret_for_unit_tests_must_be_at_least_32_chars_long"
+  expiration-ms: 3600000
+  refresh-expiration-ms: 86400000
+
+device:
+  security:
+    cookie-name: device_token
+    cookie-secure: false
+    hmac-secret: "dummy_hmac_secret_for_unit_tests_32_chars"
+  binding:
+    ttl-ms: 604800000
+
+cors:
+  allowed-origins: "*"
