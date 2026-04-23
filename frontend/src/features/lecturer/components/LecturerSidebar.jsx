@@ -7,15 +7,8 @@ export default function LecturerSidebar({
   avatarLetter,
 }) {
   return (
-    <aside className="fixed inset-y-0 left-0 hidden w-64 flex-col border-r border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 md:flex">
-      <div className="flex items-center gap-3 p-6">
-        <div className="rounded-lg bg-primary p-2 text-white">
-          <span className="material-symbols-outlined">school</span>
-        </div>
-        <h1 className="text-xl font-bold tracking-tight text-primary">UniPoint Lecture</h1>
-      </div>
-
-      <nav className="mt-2 flex-1 space-y-2 px-4">
+    <aside className="relative hidden w-64 flex-col border-r border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 md:flex">
+      <nav className="mt-4 flex-1 space-y-2 px-4">
         {items.map((item) => {
           const isActive = activeFeature === item.key;
           return (

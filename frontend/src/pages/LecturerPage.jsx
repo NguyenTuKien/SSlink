@@ -132,11 +132,9 @@ export default function LecturerPage() {
 
   return (
     <div className="relative flex min-h-screen w-full flex-col overflow-x-hidden bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-display">
-      <LecturerTopHeader
-        onLogout={handleLogout}
-      />
+      <LecturerTopHeader onLogout={handleLogout} />
 
-      <main className="flex-1 md:ml-64">
+      <div className="flex flex-1 pt-16">
         <LecturerSidebar
           items={SIDEBAR_ITEMS_BASE}
           activeFeature={activeFeature}
@@ -145,10 +143,12 @@ export default function LecturerPage() {
           userIdLabel={userIdLabel}
           avatarLetter={avatarLetter}
         />
-        <div className="p-4 md:p-8 pb-20 md:pb-8">
-          <FeatureComponent {...props} />
-        </div>
-      </main>
+        <main className="flex-1">
+          <div className="p-4 md:p-8 pb-20 md:pb-8">
+            <FeatureComponent {...props} />
+          </div>
+        </main>
+      </div>
 
       <LecturerMobileNav activeFeature={activeFeature} onSelect={handleFeatureSelect} onLogout={handleLogout} />
     </div>

@@ -107,11 +107,11 @@ export default function StudentDashboard({ onNavigate }) {
     const latestEvents = upcomingEvents.slice(0, 4);
 
     return (
-        <main className="space-y-6">
-            <section className="rounded-3xl border border-slate-200 bg-gradient-to-r from-primary/10 via-white to-red-50 p-6 shadow-sm">
+        <main className="space-y-4 md:space-y-6">
+            <section className="rounded-3xl border border-slate-200 bg-gradient-to-r from-primary/10 via-white to-red-50 p-4 shadow-sm sm:p-6">
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                     <div>
-                        <h1 className="text-2xl font-bold text-slate-900">Chào {greetingName},</h1>
+                        <h1 className="text-xl font-bold text-slate-900 sm:text-2xl">Chào {greetingName},</h1>
                         <p className="mt-1 text-sm text-slate-600">
                             {dashboard.classCode || "--"} · {dashboard.facultyName || "Khoa chưa cập nhật"}
                         </p>
@@ -119,10 +119,10 @@ export default function StudentDashboard({ onNavigate }) {
                             Bạn có <strong>{pendingCount}</strong> minh chứng đang chờ duyệt và đã hoàn thành <strong>{approvedCount}</strong> minh chứng.
                         </p>
                     </div>
-                    <div className="flex flex-wrap gap-2">
+                    <div className="grid w-full grid-cols-1 gap-2 sm:w-auto sm:grid-cols-2 lg:flex lg:flex-wrap">
                         <button
                             type="button"
-                            className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white hover:opacity-90"
+                            className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white hover:opacity-90"
                             onClick={() => onNavigate?.("scan-qr")}
                         >
                             <span className="material-symbols-outlined text-base">qr_code_scanner</span>
@@ -130,7 +130,7 @@ export default function StudentDashboard({ onNavigate }) {
                         </button>
                         <button
                             type="button"
-                            className="inline-flex items-center gap-2 rounded-xl border border-primary/20 bg-white px-4 py-2 text-sm font-semibold text-primary hover:bg-primary/5"
+                            className="inline-flex items-center justify-center gap-2 rounded-xl border border-primary/20 bg-white px-4 py-2 text-sm font-semibold text-primary hover:bg-primary/5"
                             onClick={() => onNavigate?.("evidence")}
                         >
                             <span className="material-symbols-outlined text-base">task_alt</span>
@@ -138,7 +138,7 @@ export default function StudentDashboard({ onNavigate }) {
                         </button>
                         <button
                             type="button"
-                            className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                            className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
                             onClick={() => onNavigate?.("evaluation")}
                         >
                             <span className="material-symbols-outlined text-base">assignment</span>

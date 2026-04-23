@@ -8,6 +8,7 @@ import ct01.n06.backend.dto.qrcode.QrCheckinMessage;
 import ct01.n06.backend.entity.AttendenceEntity;
 import ct01.n06.backend.entity.EventEntity;
 import ct01.n06.backend.entity.StudentEntity;
+import ct01.n06.backend.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
@@ -28,6 +29,7 @@ public class QrCodeConsumer {
     private final EventRepository eventRepository;
     private final StudentRepository studentRepository;
     private final StringRedisTemplate stringRedisTemplate;
+    private final NotificationService notificationService;
 
     @RabbitListener(queues = RabbitMQConfig.QUEUE_NAME)
     public void processQrCheckin(QrCheckinMessage message) {
@@ -71,7 +73,8 @@ public class QrCodeConsumer {
             return;
         }
 
-        String finalDeviceLockKey = "event_checkin:" + eventId + ":device:" + normalizedDeviceId;
+        // Must match key format from QrCodeServiceImpl.performCheckin(...)
+        String finalDeviceLockKey = "event_device_checkin:" + eventId + ":" + normalizedDeviceId;
         String finalDeviceLockValue = studentId;
 
         log.info("Nhận message check-in: studentId={}, eventId={}, deviceId={}", studentId, eventId, normalizedDeviceId);
@@ -103,6 +106,12 @@ public class QrCodeConsumer {
                     stringRedisTemplate.delete(finalDeviceLockKey);
                 }
                 throw e;
+            }
+
+            try {
+                notificationService.createStudentCheckinNotification(student, event);
+            } catch (Exception e) {
+                log.warn("Không thể gửi thông báo check-in: studentId={}, eventId={}", studentId, eventId, e);
             }
 
             log.info("Check-in thành công: studentId={}, eventId={}, deviceId={}", studentId, eventId,

@@ -101,7 +101,7 @@ export default function AdminPage() {
           lecturerStats={lecturerWorkspace.stats}
           studentStats={studentWorkspace.stats}
         />
-        <div className="flex-1 overflow-y-auto p-4 md:p-8 pb-24 md:pb-8">
+        <div className="flex-1 overflow-y-auto p-3 sm:p-4 md:p-8 pb-24 md:pb-8">
           <FeatureComponent {...featureProps} />
         </div>
       </main>

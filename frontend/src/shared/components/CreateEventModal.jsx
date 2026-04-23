@@ -310,17 +310,18 @@ function CreateEventModal({ isOpen, onClose, onSuccess, initialEvent = null }) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="bg-white dark:bg-slate-900 w-full max-w-2xl rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden">
-        <div className="px-8 py-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+    <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-2 md:p-4">
+      <div className="bg-white dark:bg-slate-900 w-full max-w-5xl rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col max-h-[80vh] md:max-h-[85vh]">
+        {/* Header */}
+        <div className="px-4 md:px-8 py-3 md:py-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between flex-shrink-0">
           <div>
             <h3 className="text-xl font-bold">{isEditMode ? 'Cập nhật sự kiện' : 'Tạo sự kiện mới'}</h3>
-            <p className="text-sm text-slate-500 mt-1">
+            <p className="text-sm text-slate-500 mt-0.5">
               {isEditMode ? 'Chỉnh sửa thông tin sự kiện.' : 'Điền các thông tin cần thiết bên dưới.'}
             </p>
           </div>
           <button
-            className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors"
+            className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors flex-shrink-0"
             onClick={handleClose}
             type="button"
           >
@@ -328,201 +329,223 @@ function CreateEventModal({ isOpen, onClose, onSuccess, initialEvent = null }) {
           </button>
         </div>
 
-        <form className="p-8 space-y-6" onSubmit={handleSubmit}>
-          {error && (
-            <div className="text-sm text-red-600 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg px-4 py-3">
-              {error}
-            </div>
-          )}
+        {/* Scrollable body */}
+        <div className="overflow-y-auto flex-1">
+          <form id="create-event-form" className="px-4 md:px-8 py-3 md:py-6" onSubmit={handleSubmit}>
+            {error && (
+              <div className="text-sm text-red-600 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg px-4 py-3 mb-6">
+                {error}
+              </div>
+            )}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="md:col-span-2">
-              <label
-                className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2"
-                htmlFor="event-name"
-              >
-                Tên sự kiện <span className="text-red-500">*</span>
-              </label>
-              <input
-                className="w-full border-slate-200 dark:border-slate-800 dark:bg-slate-800 rounded-lg focus:ring-primary focus:border-primary px-4 py-2.5 disabled:opacity-60 disabled:bg-slate-50 dark:disabled:bg-slate-800/50 disabled:cursor-not-allowed"
-                id="event-name"
-                placeholder="Ví dụ: Hội thảo Phát triển Kỹ năng số"
-                type="text"
-                value={formData.title}
-                onChange={handleChange}
-                disabled={isClassMeeting}
-              />
-            </div>
+            {/* Desktop: 2 columns side by side | Mobile: single column */}
+            <div className="grid grid-cols-1 md:grid-cols-2 md:gap-x-8 gap-y-3 md:gap-y-5">
 
-            <div>
-              <label
-                className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2"
-                htmlFor="event-organizer"
-              >
-                Ban tổ chức <span className="text-red-500">*</span>
-              </label>
-              <select
-                className="w-full border-slate-200 dark:border-slate-800 dark:bg-slate-800 rounded-lg focus:ring-primary focus:border-primary px-4 py-2.5 disabled:opacity-60 disabled:bg-slate-50 dark:disabled:bg-slate-800/50 disabled:cursor-not-allowed"
-                id="event-organizer"
-                value={formData.organizer}
-                onChange={handleChange}
-                disabled={isClassMeeting && classMeetingOptions.length === 0}
-              >
-                {isClassMeeting ? (
-                  <>
-                    <option value="">{classMeetingOptions.length ? 'Chọn lớp phụ trách' : 'Chưa có lớp phụ trách'}</option>
-                    {classMeetingOptions.map((item) => (
-                      <option key={item.value} value={item.value}>{item.label}</option>
+              {/* ── LEFT COLUMN ── */}
+              <div className="flex flex-col gap-3 md:gap-5">
+                {/* Tên sự kiện */}
+                <div>
+                  <label
+                    className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1 md:mb-2"
+                    htmlFor="event-name"
+                  >
+                    Tên sự kiện <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    className="w-full border border-slate-200 dark:border-slate-700 dark:bg-slate-800 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary px-3 py-2 md:px-4 md:py-2.5 disabled:opacity-60 disabled:bg-slate-50 dark:disabled:bg-slate-800/50 disabled:cursor-not-allowed transition"
+                    id="event-name"
+                    placeholder="Ví dụ: Hội thảo Phát triển Kỹ năng số"
+                    type="text"
+                    value={formData.title}
+                    onChange={handleChange}
+                    disabled={isClassMeeting}
+                  />
+                </div>
+
+                {/* Tiêu chí đánh giá */}
+                <div>
+                  <label
+                    className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1 md:mb-2"
+                    htmlFor="event-criteria"
+                  >
+                    Tiêu chí đánh giá <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    className="w-full border border-slate-200 dark:border-slate-700 dark:bg-slate-800 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary px-3 py-2 md:px-4 md:py-2.5 transition"
+                    id="event-criteria"
+                    value={formData.criteriaId}
+                    onChange={handleChange}
+                  >
+                    <option value="">Chọn tiêu chí</option>
+                    {criterias.map(criteria => (
+                      <option key={criteria.id} value={criteria.id}>{criteria.code} - {criteria.name}</option>
                     ))}
-                  </>
-                ) : (
-                  <>
-                    <option value="">Chọn đơn vị tổ chức</option>
-                    <option>Khoa CNTT</option>
-                    <option>CLB Kỹ năng</option>
-                    <option>Phòng Đào tạo</option>
-                  </>
-                )}
-              </select>
-              {isClassMeeting && (
-                <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
-                  Ban tổ chức được lấy từ danh sách lớp bạn đang phụ trách.
-                </p>
-              )}
-              {isClassMeeting && classOptionsError && (
-                <p className="mt-1 text-xs text-red-500">{classOptionsError}</p>
-              )}
-              {isClassMeeting && classMeetingOptions.length === 0 && !classOptionsError && (
-                <p className="mt-1 text-xs text-red-500">Bạn chưa có lớp phụ trách để tạo sự kiện họp lớp.</p>
-              )}
-            </div>
+                  </select>
+                </div>
 
-            <div>
-              <label
-                className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2"
-                htmlFor="event-semester"
-              >
-                Học kỳ <span className="text-red-500">*</span>
-              </label>
-              <select
-                className="w-full border-slate-200 dark:border-slate-800 dark:bg-slate-800 rounded-lg focus:ring-primary focus:border-primary px-4 py-2.5"
-                id="event-semester"
-                value={formData.semesterId}
-                onChange={handleChange}
-              >
-                <option value="">Chọn học kỳ</option>
-                {semesters.map(semester => (
-                  <option key={semester.id} value={semester.id}>{semester.name}</option>
-                ))}
-              </select>
-            </div>
+                {/* Mô tả */}
+                <div className="flex-1 flex flex-col">
+                  <label
+                    className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1 md:mb-2"
+                    htmlFor="event-description"
+                  >
+                    Mô tả sự kiện
+                  </label>
+                  <textarea
+                    className="w-full flex-1 border border-slate-200 dark:border-slate-700 dark:bg-slate-800 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary px-4 py-2.5 resize-none transition"
+                    id="event-description"
+                    placeholder="Mô tả nội dung chính của sự kiện..."
+                    rows="3"
+                    value={formData.description}
+                    onChange={handleChange}
+                  />
+                </div>
+              </div>
 
-            <div className="md:col-span-2">
-              <label
-                className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2"
-                htmlFor="event-criteria"
-              >
-                Tiêu chí đánh giá <span className="text-red-500">*</span>
-              </label>
-              <select
-                className="w-full border-slate-200 dark:border-slate-800 dark:bg-slate-800 rounded-lg focus:ring-primary focus:border-primary px-4 py-2.5"
-                id="event-criteria"
-                value={formData.criteriaId}
-                onChange={handleChange}
-              >
-                <option value="">Chọn tiêu chí</option>
-                {criterias.map(criteria => (
-                  <option key={criteria.id} value={criteria.id}>{criteria.code} - {criteria.name}</option>
-                ))}
-              </select>
-            </div>
+              {/* ── RIGHT COLUMN ── */}
+              <div className="flex flex-col gap-3 md:gap-5">
+                {/* Ban tổ chức */}
+                <div>
+                  <label
+                    className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1 md:mb-2"
+                    htmlFor="event-organizer"
+                  >
+                    Ban tổ chức <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    className="w-full border border-slate-200 dark:border-slate-700 dark:bg-slate-800 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary px-3 py-2 md:px-4 md:py-2.5 disabled:opacity-60 disabled:bg-slate-50 dark:disabled:bg-slate-800/50 disabled:cursor-not-allowed transition"
+                    id="event-organizer"
+                    value={formData.organizer}
+                    onChange={handleChange}
+                    disabled={isClassMeeting && classMeetingOptions.length === 0}
+                  >
+                    {isClassMeeting ? (
+                      <>
+                        <option value="">{classMeetingOptions.length ? 'Chọn lớp phụ trách' : 'Chưa có lớp phụ trách'}</option>
+                        {classMeetingOptions.map((item) => (
+                          <option key={item.value} value={item.value}>{item.label}</option>
+                        ))}
+                      </>
+                    ) : (
+                      <>
+                        <option value="">Chọn đơn vị tổ chức</option>
+                        <option>Khoa CNTT</option>
+                        <option>CLB Kỹ năng</option>
+                        <option>Phòng Đào tạo</option>
+                      </>
+                    )}
+                  </select>
+                  {isClassMeeting && (
+                    <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
+                      Ban tổ chức được lấy từ danh sách lớp bạn đang phụ trách.
+                    </p>
+                  )}
+                  {isClassMeeting && classOptionsError && (
+                    <p className="mt-1 text-xs text-red-500">{classOptionsError}</p>
+                  )}
+                  {isClassMeeting && classMeetingOptions.length === 0 && !classOptionsError && (
+                    <p className="mt-1 text-xs text-red-500">Bạn chưa có lớp phụ trách để tạo sự kiện họp lớp.</p>
+                  )}
+                </div>
 
-            <div className="md:col-span-2">
-              <label
-                className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2"
-                htmlFor="event-description"
-              >
-                Mô tả sự kiện
-              </label>
-              <textarea
-                className="w-full border-slate-200 dark:border-slate-800 dark:bg-slate-800 rounded-lg focus:ring-primary focus:border-primary px-4 py-2.5"
-                id="event-description"
-                placeholder="Mô tả nội dung chính của sự kiện..."
-                rows="3"
-                value={formData.description}
-                onChange={handleChange}
-              />
-            </div>
+                {/* Học kỳ */}
+                <div>
+                  <label
+                    className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1 md:mb-2"
+                    htmlFor="event-semester"
+                  >
+                    Học kỳ <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    className="w-full border border-slate-200 dark:border-slate-700 dark:bg-slate-800 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary px-3 py-2 md:px-4 md:py-2.5 transition"
+                    id="event-semester"
+                    value={formData.semesterId}
+                    onChange={handleChange}
+                  >
+                    <option value="">Chọn học kỳ</option>
+                    {semesters.map(semester => (
+                      <option key={semester.id} value={semester.id}>{semester.name}</option>
+                    ))}
+                  </select>
+                </div>
 
-            <div>
-              <label
-                className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2"
-                htmlFor="event-start-time"
-              >
-                Thời gian bắt đầu
-              </label>
-              <input
-                className="w-full border-slate-200 dark:border-slate-800 dark:bg-slate-800 rounded-lg focus:ring-primary focus:border-primary px-4 py-2.5 disabled:opacity-60 disabled:bg-slate-50 dark:disabled:bg-slate-800/50 disabled:cursor-not-allowed"
-                id="event-start-time"
-                type="datetime-local"
-                value={formData.startTime}
-                onChange={handleChange}
-                disabled={isClassMeeting}
-              />
-            </div>
+                {/* Thời gian bắt đầu */}
+                <div>
+                  <label
+                    className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1 md:mb-2"
+                    htmlFor="event-start-time"
+                  >
+                    Thời gian bắt đầu <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    className="w-full border border-slate-200 dark:border-slate-700 dark:bg-slate-800 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary px-3 py-2 md:px-4 md:py-2.5 disabled:opacity-60 disabled:bg-slate-50 dark:disabled:bg-slate-800/50 disabled:cursor-not-allowed transition"
+                    id="event-start-time"
+                    type="datetime-local"
+                    value={formData.startTime}
+                    onChange={handleChange}
+                    disabled={isClassMeeting}
+                  />
+                </div>
 
-            <div>
-              <label
-                className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2"
-                htmlFor="event-end-time"
-              >
-                Thời gian kết thúc
-              </label>
-              <input
-                className="w-full border-slate-200 dark:border-slate-800 dark:bg-slate-800 rounded-lg focus:ring-primary focus:border-primary px-4 py-2.5 disabled:opacity-60 disabled:bg-slate-50 dark:disabled:bg-slate-800/50 disabled:cursor-not-allowed"
-                id="event-end-time"
-                type="datetime-local"
-                value={formData.endTime}
-                onChange={handleChange}
-                disabled={isClassMeeting}
-              />
-            </div>
+                {/* Thời gian kết thúc */}
+                <div>
+                  <label
+                    className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1 md:mb-2"
+                    htmlFor="event-end-time"
+                  >
+                    Thời gian kết thúc <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    className="w-full border border-slate-200 dark:border-slate-700 dark:bg-slate-800 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary px-3 py-2 md:px-4 md:py-2.5 disabled:opacity-60 disabled:bg-slate-50 dark:disabled:bg-slate-800/50 disabled:cursor-not-allowed transition"
+                    id="event-end-time"
+                    type="datetime-local"
+                    value={formData.endTime}
+                    onChange={handleChange}
+                    disabled={isClassMeeting}
+                  />
+                </div>
 
-            <div className="md:col-span-2">
-              <label
-                className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2"
-                htmlFor="event-location"
-              >
-                Địa điểm <span className="text-red-500">*</span>
-              </label>
-              <input
-                className="w-full border-slate-200 dark:border-slate-800 dark:bg-slate-800 rounded-lg focus:ring-primary focus:border-primary px-4 py-2.5"
-                id="event-location"
-                placeholder="Nhập tên phòng hoặc khu vực..."
-                type="text"
-                value={formData.location}
-                onChange={handleChange}
-              />
-            </div>
-          </div>
+                {/* Địa điểm */}
+                <div>
+                  <label
+                    className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1 md:mb-2"
+                    htmlFor="event-location"
+                  >
+                    Địa điểm <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    className="w-full border border-slate-200 dark:border-slate-700 dark:bg-slate-800 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary px-3 py-2 md:px-4 md:py-2.5 transition"
+                    id="event-location"
+                    placeholder="Nhập tên phòng hoặc khu vực..."
+                    type="text"
+                    value={formData.location}
+                    onChange={handleChange}
+                  />
+                </div>
+              </div>
 
-          <div className="pt-6 flex items-center justify-end gap-3 border-t border-slate-100 dark:border-slate-800 mt-6">
-            <button
-              className="px-6 py-2.5 text-sm font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
-              onClick={handleClose}
-              type="button"
-            >
-              Hủy bỏ
-            </button>
-            <button
-              className="bg-[#d23232] hover:bg-[#d23232]/90 text-white px-8 py-2.5 rounded-lg font-bold shadow-lg shadow-[#d23232]/20 transition-all"
-              type="submit"
-              disabled={loading || isClassMeetingOrganizerInvalid}
-            >
-              {loading ? 'Đang lưu...' : (isEditMode ? 'Cập nhật' : 'Lưu sự kiện')}
-            </button>
-          </div>
-        </form>
+            </div>
+          </form>
+        </div>
+
+        {/* Footer */}
+        <div className="px-4 md:px-8 py-3 md:py-4 flex items-center justify-end gap-3 border-t border-slate-100 dark:border-slate-800 flex-shrink-0">
+          <button
+            className="px-6 py-2.5 text-sm font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+            onClick={handleClose}
+            type="button"
+          >
+            Hủy bỏ
+          </button>
+          <button
+            className="bg-[#d23232] hover:bg-[#d23232]/90 text-white px-8 py-2.5 rounded-lg font-bold shadow-lg shadow-[#d23232]/20 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+            form="create-event-form"
+            type="submit"
+            disabled={loading || isClassMeetingOrganizerInvalid}
+          >
+            {loading ? 'Đang lưu...' : (isEditMode ? 'Cập nhật' : 'Lưu sự kiện')}
+          </button>
+        </div>
       </div>
     </div>
   )

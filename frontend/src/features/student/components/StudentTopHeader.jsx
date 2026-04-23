@@ -1,14 +1,14 @@
 ﻿export default function StudentTopHeader({ fullNameLabel, userIdLabel, avatarLetter, onLogout }) {
   return (
-    <header className="flex items-center justify-between whitespace-nowrap border-b border-primary/10 px-6 md:px-10 py-3 bg-white dark:bg-background-dark/50 sticky top-0 z-50">
-      <div className="flex items-center gap-4 text-primary">
+    <header className="sticky top-0 z-50 flex items-center justify-between border-b border-primary/10 bg-white px-3 py-3 dark:bg-background-dark/50 sm:px-4 md:px-10">
+      <div className="flex items-center gap-2 text-primary sm:gap-4">
         <div className="size-8 flex items-center justify-center bg-primary rounded-lg text-white">
           <span className="material-symbols-outlined">school</span>
         </div>
-        <h2 className="text-slate-900 dark:text-slate-100 text-lg font-bold leading-tight tracking-tight">UniPoint</h2>
+        <h2 className="text-base font-bold leading-tight tracking-tight text-slate-900 dark:text-slate-100 sm:text-lg">UniPoint</h2>
       </div>
 
-      <div className="flex flex-1 justify-end gap-4 items-center">
+      <div className="flex flex-1 items-center justify-end gap-2 sm:gap-4">
         <div className="hidden md:flex gap-2">
           <button className="flex items-center justify-center rounded-lg h-10 w-10 bg-primary/10 text-primary hover:bg-primary hover:text-white transition-colors" type="button">
             <span className="material-symbols-outlined">settings</span>

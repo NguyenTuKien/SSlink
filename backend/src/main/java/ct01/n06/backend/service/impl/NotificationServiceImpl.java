@@ -29,6 +29,7 @@ import ct01.n06.backend.dto.student.StudentNotificationListResponse;
 import ct01.n06.backend.dto.student.StudentNotificationListResponse.StudentNotificationItem;
 import ct01.n06.backend.dto.student.StudentNotificationUnreadResponse;
 import ct01.n06.backend.entity.ClassEntity;
+import ct01.n06.backend.entity.EventEntity;
 import ct01.n06.backend.entity.NotificationEntity;
 import ct01.n06.backend.entity.NotificationRecipientEntity;
 import ct01.n06.backend.entity.StudentEntity;
@@ -211,6 +212,66 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     return new NotificationAttachment(notification.getAttachmentName(), filePath);
+  }
+
+  @Override
+  @Transactional
+  public void createStudentCheckinNotification(StudentEntity student, EventEntity event) {
+    if (student == null || event == null) {
+      log.warn("Bỏ qua gửi thông báo check-in vì thiếu dữ liệu: student={}, event={}", student, event);
+      return;
+    }
+
+    StudentEntity resolvedStudent = studentRepository.findById(student.getId())
+        .orElse(student);
+
+    String eventTitle = StringUtils.hasText(event.getTitle()) ? event.getTitle() : "sự kiện";
+    String checkinTime = LocalDateTime.now().format(UI_TIME_FORMAT);
+    String title = "Điểm danh thành công";
+    String content = "Bạn đã điểm danh thành công cho " + eventTitle + " lúc " + checkinTime + ".";
+
+    NotificationEntity notification = NotificationEntity.builder()
+        .sender(null)
+        .title(title)
+        .content(content)
+        .targetType(NotificationType.STUDENT)
+        .classEntity(resolvedStudent.getClassEntity())
+        .build();
+    NotificationEntity savedNotification = notificationRepository.save(notification);
+
+    NotificationRecipientEntity recipient = NotificationRecipientEntity.builder()
+        .notification(savedNotification)
+        .student(resolvedStudent)
+        .read(false)
+        .build();
+    notificationRecipientRepository.save(recipient);
+
+    try {
+      UserEntity user = resolvedStudent.getUserEntity();
+      if (user == null || user.getStatus() == UserStatus.DELETED) {
+        return;
+      }
+
+      String email = user.getEmail();
+      if (!StringUtils.hasText(email)) {
+        return;
+      }
+
+      String recipientName = StringUtils.hasText(resolvedStudent.getFullName()) ? resolvedStudent.getFullName() : "Bạn";
+      emailService.sendNotificationEmail(
+          "[UniPoint] " + title,
+          content,
+          "Hệ thống UniPoint",
+          List.of(new EmailRecipient(email.trim(), recipientName)),
+          null,
+          null
+      );
+    } catch (Exception ex) {
+      log.warn("Gửi email thông báo check-in thất bại: studentId={}, eventId={}",
+          student.getId(),
+          event.getId(),
+          ex);
+    }
   }
 
   private NotificationType normalizeTargetType(NotificationType targetType) {

@@ -48,4 +48,7 @@ public interface StudentRepository extends JpaRepository<StudentEntity, String> 
       where l.id = :lecturerId
       """)
   List<StudentEntity> findAllByLecturerIdWithDetails(@Param("lecturerId") String lecturerId);
+
+  @EntityGraph(attributePaths = {"userEntity", "classEntity"})
+  Optional<StudentEntity> findById(String id);
 }

@@ -1,6 +1,16 @@
-﻿export default function LecturerTopHeader({ onLogout }) {
+export default function LecturerTopHeader({ onLogout }) {
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center justify-end border-b border-slate-200 bg-white/80 px-4 backdrop-blur-md dark:border-slate-800 dark:bg-slate-900/80 md:ml-64 md:px-8">
+    <header className="absolute inset-x-0 top-0 z-30 flex h-16 items-center justify-between border-b border-slate-200 bg-white px-4 dark:border-slate-800 dark:bg-slate-900 md:px-8">
+      <div className="flex items-center gap-3">
+        <div className="rounded-lg bg-primary p-1.5 text-white">
+          <span className="material-symbols-outlined text-xl">school</span>
+        </div>
+        <div className="flex flex-col">
+          <h1 className="text-base font-bold leading-tight tracking-tight text-primary md:text-lg">UniPoint</h1>
+          <p className="hidden text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 md:block">Lecture Portal</p>
+        </div>
+      </div>
+
       <div className="flex items-center gap-3 md:gap-4">
         <button
           type="button"

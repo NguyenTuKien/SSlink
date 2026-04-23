@@ -13,6 +13,7 @@ import StudentStatisticsPanel from "../features/student/components/StudentStatis
 import StudentNotificationsPanel from "../features/student/components/StudentNotificationsPanel";
 import StudentEvaluationBoard from "../features/student/StudentEvaluationBoard";
 import StudentEvidenceDeclarationPanel from "../features/student/components/StudentEvidenceDeclarationPanel";
+import StudentUtilitiesPanel from "../features/student/components/StudentUtilitiesPanel";
 
 function normalizeRole(role) {
   if (!role) return "";
@@ -53,6 +54,7 @@ const FEATURE_COMPONENTS = {
   evaluation: StudentEvaluationBoard,
   "manage-class": MonitorClass,
   evidence: StudentEvidenceDeclarationPanel,
+  utilities: StudentUtilitiesPanel,
 };
 
 export default function StudentPage() {
@@ -96,19 +98,26 @@ export default function StudentPage() {
     [isMonitor, studentUnreadCount],
   );
 
-  const FeatureComponent = FEATURE_COMPONENTS[activeFeature] || StudentDashboard;
-  const featureProps =
-    activeFeature === "notifications"
-      ? { onUnreadCountChange: setStudentUnreadCount }
-      : { onNavigate: setActiveFeature };
-  const fullNameLabel = user?.displayName || "Student";
-  const userIdLabel = user?.profileCode || user?.userId || "---";
-  const avatarLetter = (fullNameLabel || "S").slice(0, 1).toUpperCase();
-
   const handleLogout = async () => {
     await logout();
     navigate("/auth", { replace: true });
   };
+
+  const FeatureComponent = FEATURE_COMPONENTS[activeFeature] || StudentDashboard;
+  const featureProps =
+    activeFeature === "notifications"
+      ? { onUnreadCountChange: setStudentUnreadCount }
+      : activeFeature === "utilities"
+        ? {
+            onNavigate: setActiveFeature,
+            unreadCount: studentUnreadCount,
+            isMonitor,
+            onLogout: handleLogout,
+          }
+        : { onNavigate: setActiveFeature };
+  const fullNameLabel = user?.displayName || "Student";
+  const userIdLabel = user?.profileCode || user?.userId || "---";
+  const avatarLetter = (fullNameLabel || "S").slice(0, 1).toUpperCase();
 
   return (
     <div className="relative flex min-h-screen w-full flex-col overflow-x-hidden bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-display">
@@ -122,7 +131,7 @@ export default function StudentPage() {
       <main className="flex-1 flex flex-col md:flex-row">
         <StudentSidebar items={sidebarItems} activeFeature={activeFeature} onSelect={setActiveFeature} />
 
-        <div className="flex-1 p-4 md:p-8 max-w-6xl mx-auto w-full pb-20 md:pb-8">
+        <div className="flex-1 w-full max-w-6xl mx-auto p-3 sm:p-4 md:p-8 pb-24 md:pb-8">
           <FeatureComponent {...featureProps} />
         </div>
       </main>
@@ -130,7 +139,6 @@ export default function StudentPage() {
       <StudentMobileNav
         activeFeature={activeFeature}
         onSelect={setActiveFeature}
-        onLogout={handleLogout}
         unreadCount={studentUnreadCount}
       />
     </div>

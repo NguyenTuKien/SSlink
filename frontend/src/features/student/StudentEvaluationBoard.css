@@ -361,3 +361,88 @@
 .color-purple-text {
   color: #a855f7;
 }
+
+@media (max-width: 1024px) {
+  .eval-summary-cards {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .eval-item-card {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    padding: 14px;
+  }
+
+  .eval-item-action {
+    min-width: 0;
+    align-items: flex-start;
+  }
+
+  .eval-input-group {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .eval-bottom-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    padding: 14px;
+  }
+
+  .eval-bottom-actions {
+    width: 100%;
+  }
+
+  .eval-btn {
+    flex: 1;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 640px) {
+  .eval-board-container {
+    padding-bottom: 20px;
+  }
+
+  .eval-board-title {
+    font-size: 24px;
+    line-height: 1.2;
+  }
+
+  .eval-board-subtitle {
+    flex-wrap: wrap;
+  }
+
+  .status-card-deadline {
+    font-size: 12px;
+  }
+
+  .eval-card-value {
+    font-size: 28px;
+  }
+
+  .eval-group-title {
+    font-size: 15px;
+  }
+
+  .eval-item-title {
+    font-size: 14px;
+  }
+
+  .eval-item-desc {
+    font-size: 12px;
+  }
+
+  .eval-input-box {
+    width: 64px;
+    height: 38px;
+  }
+
+  .eval-bottom-actions {
+    flex-direction: column;
+  }
+}

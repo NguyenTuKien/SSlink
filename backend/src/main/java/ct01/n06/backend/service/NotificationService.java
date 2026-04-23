@@ -23,6 +23,11 @@ public interface NotificationService {
 
   NotificationAttachment getStudentAttachment(String userId, Long recipientId);
 
+  void createStudentCheckinNotification(
+      ct01.n06.backend.entity.StudentEntity student,
+      ct01.n06.backend.entity.EventEntity event
+  );
+
   record NotificationAttachment(String fileName, Path filePath) {
   }
 }

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Html5Qrcode } from 'html5-qrcode'
 import { qrcodeApi } from '../../../shared/api/qrcodeApi'
 
@@ -75,7 +76,7 @@ const handleCheckinSubmit = async ({ qrData, eventId }) => {
   }
 }
 
-function QRScanner() {
+function QRScanner({ onNavigate }) {
   // QR Scanner States
   const [permissionStatus, setPermissionStatus] = useState('idle')
   const [isScanning, setIsScanning] = useState(false)
@@ -85,7 +86,10 @@ function QRScanner() {
   const [scanCompleted, setScanCompleted] = useState(false)
   const [pinDigits, setPinDigits] = useState(() => Array(6).fill(''))
   const toastTimerRef = useRef(null)
+  const redirectTimerRef = useRef(null)
   const pinInputRefs = useRef([])
+
+  const navigate = useNavigate()
 
   const scannerRef = useRef(null)
   const scanLockRef = useRef(false)
@@ -121,7 +125,18 @@ function QRScanner() {
       clearTimeout(toastTimerRef.current)
     }
     toastTimerRef.current = setTimeout(() => setToastMessage(''), 3500)
-  }, [])
+
+    if (redirectTimerRef.current) {
+      clearTimeout(redirectTimerRef.current)
+    }
+    redirectTimerRef.current = setTimeout(() => {
+      if (typeof onNavigate === 'function') {
+        onNavigate('dashboard')
+        return
+      }
+      navigate('/student', { replace: true })
+    }, 1400)
+  }, [navigate, onNavigate])
 
   const handleCheckinError = useCallback((error) => {
     setNotice({ type: 'error', message: error?.message || 'Mã không hợp lệ hoặc đã hết hạn.' })
@@ -212,7 +227,15 @@ function QRScanner() {
     if (toastTimerRef.current) {
       clearTimeout(toastTimerRef.current)
     }
+    if (redirectTimerRef.current) {
+      clearTimeout(redirectTimerRef.current)
+    }
   }, [stopScanner])
+
+  const resetPinInputs = useCallback(() => {
+    setPinDigits(Array(6).fill(''))
+    pinInputRefs.current[0]?.focus()
+  }, [])
 
   const handlePinSubmit = useCallback(async () => {
     const pinCode = pinDigits.join('')
@@ -230,16 +253,20 @@ function QRScanner() {
       handleCheckinSuccess(response.message || 'Điểm danh thành công')
     } catch (error) {
       handleCheckinError(error)
+      resetPinInputs()
     } finally {
       setIsProcessing(false)
     }
-  }, [handleCheckinError, handleCheckinSuccess, pinDigits, stopScanner])
+  }, [handleCheckinError, handleCheckinSuccess, pinDigits, resetPinInputs, stopScanner])
 
   const handleResetQRTab = async () => {
     setPinDigits(Array(6).fill(''))
     setScanCompleted(false)
     setNotice({ type: '', message: '' })
     scanLockRef.current = false
+    if (redirectTimerRef.current) {
+      clearTimeout(redirectTimerRef.current)
+    }
     if (permissionStatus === 'granted') {
       await startScanner()
     }
@@ -297,18 +324,18 @@ function QRScanner() {
   return (
     <div className="relative flex flex-col text-slate-900 dark:text-slate-100 font-display">
       {toastMessage && (
-        <div className="fixed top-4 right-4 z-[60] flex items-center gap-3 rounded-lg bg-green-600 text-white px-4 py-3 shadow-lg shadow-green-600/30">
+        <div className="fixed left-3 right-3 top-3 z-[60] flex items-center gap-3 rounded-lg bg-green-600 px-4 py-3 text-white shadow-lg shadow-green-600/30 sm:left-auto sm:right-4 sm:top-4">
           <span className="material-symbols-outlined">celebration</span>
           <span className="text-sm font-semibold">{toastMessage}</span>
         </div>
       )}
-      <div className="w-full max-w-5xl mx-auto">
+      <div className="mx-auto w-full max-w-5xl">
         <div className="flex flex-col gap-6">
           <div className="bg-white dark:bg-slate-800/50 rounded-xl border border-primary/10 shadow-sm overflow-hidden">
-            <div className="p-6 md:p-10">
+            <div className="p-4 sm:p-6 md:p-10">
               <div className="flex flex-col items-center max-w-md mx-auto animate-fade-in" id="tab-qr">
-                <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-2">Nhập mã PIN điểm danh</h3>
-                <p className="text-slate-500 text-sm text-center mb-8">Nhập đúng mã PIN 6 chữ số được cung cấp bởi ban tổ chức.</p>
+                <h3 className="mb-2 text-center text-lg font-bold text-slate-900 dark:text-slate-100 sm:text-xl">Nhập mã PIN điểm danh</h3>
+                <p className="mb-6 text-center text-sm text-slate-500 sm:mb-8">Nhập đúng mã PIN 6 chữ số được cung cấp bởi ban tổ chức.</p>
 
                 {scanCompleted && notice.type === 'success' && (
                   <div className="w-full mb-6 p-5 rounded-2xl border border-green-200 bg-green-50 dark:bg-green-900/20 dark:border-green-800">
@@ -317,18 +344,22 @@ function QRScanner() {
                       <div className="flex-1">
                         <p className="text-base font-bold text-green-800 dark:text-green-300">Điểm danh thành công</p>
                         <p className="text-sm mt-1 text-green-700 dark:text-green-400">{notice.message}</p>
-                        <div className="mt-4 flex gap-2">
+                        <div className="mt-4 flex flex-col gap-2 sm:flex-row">
                           <button
                             onClick={() => {
-                              window.location.href = '/student'
+                              if (typeof onNavigate === 'function') {
+                                onNavigate('dashboard')
+                                return
+                              }
+                              navigate('/student', { replace: true })
                             }}
-                            className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-semibold"
+                            className="w-full bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-semibold sm:w-auto"
                           >
                             Quay lại Dashboard
                           </button>
                           <button
                             onClick={handleResetQRTab}
-                            className="bg-white text-green-700 border border-green-300 px-4 py-2 rounded-lg text-sm font-semibold"
+                            className="w-full bg-white text-green-700 border border-green-300 px-4 py-2 rounded-lg text-sm font-semibold sm:w-auto"
                           >
                             Quét lại
                           </button>
@@ -428,7 +459,7 @@ function QRScanner() {
                       <div className="flex-1 h-px bg-slate-200 dark:bg-slate-800"></div>
                     </div>
                     <div className="flex flex-col gap-4">
-                      <div className="flex items-center justify-center gap-2">
+                      <div className="flex items-center justify-center gap-1.5 sm:gap-2">
                         {pinDigits.map((digit, index) => (
                           <input
                             key={index}
@@ -439,7 +470,7 @@ function QRScanner() {
                             ref={(el) => {
                               pinInputRefs.current[index] = el
                             }}
-                            className="w-12 h-12 text-center text-lg font-bold bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-primary outline-none transition-all"
+                            className="h-11 w-10 rounded-lg border border-slate-200 bg-slate-50 text-center text-base font-bold outline-none transition-all focus:ring-2 focus:ring-primary dark:border-slate-700 dark:bg-slate-900 sm:h-12 sm:w-12 sm:text-lg"
                             value={digit}
                             onChange={(e) => handlePinInputChange(index, e.target.value)}
                             onKeyDown={(e) => handlePinInputKeyDown(index, e)}
