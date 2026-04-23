@@ -5,6 +5,7 @@ import AdminPage from "../pages/AdminPage";
 import LecturerPage from "../pages/LecturerPage";
 import StudentPage from "../pages/StudentPage";
 import ProtectedRoute from "../shared/components/ProtectedRoute";
+import { useNotificationPermission } from "../hooks/useNotificationPermission";
 import { useAuth } from "../context/AuthContext";
 
 function HomeRedirect() {
@@ -18,6 +19,9 @@ function HomeRedirect() {
 }
 
 export default function App() {
+  // Request notification permissions for Mobile/Web and Tauri on app mount
+  useNotificationPermission();
+
   return (
     <Routes>
       <Route path="/" element={<HomeRedirect />} />
