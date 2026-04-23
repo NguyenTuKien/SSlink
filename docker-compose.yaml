@@ -25,15 +25,9 @@ services:
        - "6379:6379"
     volumes:
       - redis_data:/data
-<<<<<<< HEAD
-    entrypoint: ["sh", "-c", "redis-server --appendonly yes --requirepass \"$$REDIS_PASSWORD\""]
-    healthcheck:
-      test: ["CMD-SHELL", "redis-cli --no-auth-warning -a \"$$REDIS_PASSWORD\" ping | grep PONG"]
-=======
     command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
     healthcheck:
       test: ["CMD-SHELL", "redis-cli -a ${REDIS_PASSWORD} ping | grep PONG"]
->>>>>>> parent of 2fdc209 (Update)
       interval: 10s
       timeout: 5s
       retries: 5
@@ -61,7 +55,7 @@ services:
 
   backend:
     build: ./backend
-    image: ${DOCKER_REGISTRY:-ngtukien218}/ttcs-backend:${TAG:-latest}
+    image: ttcs-backend
     restart: always
     ports:
       - "8080:8080"
@@ -98,7 +92,7 @@ services:
       context: ./frontend
       args:
         - VITE_API_PROXY_TARGET=http://backend:8080
-    image: ${DOCKER_REGISTRY:-ngtukien218}/ttcs-frontend:${TAG:-latest}
+    image: ttcs-frontend
     restart: always
     ports:
       - "80:80"

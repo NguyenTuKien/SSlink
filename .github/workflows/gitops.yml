@@ -12,6 +12,7 @@ permissions:
   checks: write
   pull-requests: write
   statuses: write
+  packages: write
 
 jobs:
   unit_test_job:
@@ -120,15 +121,16 @@ jobs:
       github.event_name == 'pull_request'
     env:
       TAG: ${{ needs.tag_job.outputs.docker_tag }}
-      REGISTRY_IMAGE: ${{ vars.DOCKER_REGISTRY }}
+      REGISTRY_IMAGE: ghcr.io/${{ github.repository_owner }}
     steps:
       - name: Checkout source code
         uses: actions/checkout@v4
-      - name: Log in to Docker Registry
+      - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
         with:
-          username: ${{ vars.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
       - name: Build and Push Backend
         run: |
           docker pull $REGISTRY_IMAGE/ttcs-backend:$TAG || true
@@ -155,16 +157,17 @@ jobs:
       github.event_name == 'pull_request'
     env:
       TAG: ${{ needs.tag_job.outputs.docker_tag }}
-      REGISTRY_IMAGE: ${{ vars.DOCKER_REGISTRY }}
+      REGISTRY_IMAGE: ghcr.io/${{ github.repository_owner }}
     steps:
       - name: Checkout source code
         uses: actions/checkout@v4
 
-      - name: Log in to Docker Registry
+      - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
         with:
-          username: ${{ vars.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup Environment Variables
         run: |
@@ -178,9 +181,15 @@ jobs:
           echo "TAG=$TAG" >> .env
           echo "DOCKER_REGISTRY=$REGISTRY_IMAGE" >> .env
 
+      - name: Pull and Retag Images from GHCR
+        run: |
+          docker pull $REGISTRY_IMAGE/ttcs-backend:$TAG
+          docker image tag $REGISTRY_IMAGE/ttcs-backend:$TAG ttcs-backend:latest
+          docker pull $REGISTRY_IMAGE/ttcs-frontend:$TAG
+          docker image tag $REGISTRY_IMAGE/ttcs-frontend:$TAG ttcs-frontend:latest
+
       - name: Start services with Docker Compose
         run: |
-          docker compose pull
           docker compose up -d --no-build
           
       - name: Wait and Check Logs
@@ -242,16 +251,17 @@ jobs:
     continue-on-error: true  
     env:
       TAG: ${{ needs.tag_job.outputs.docker_tag }}
-      REGISTRY_IMAGE: ${{ vars.DOCKER_REGISTRY }}
+      REGISTRY_IMAGE: ghcr.io/${{ github.repository_owner }}
     steps:
       - name: Checkout source code
         uses: actions/checkout@v4
         
-      - name: Log in to Docker Registry
+      - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
         with:
-          username: ${{ vars.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
           
       - name: Run Trivy vulnerability scanner - Filesystem
         uses: aquasecurity/trivy-action@master
