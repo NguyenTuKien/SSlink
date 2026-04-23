@@ -9,7 +9,7 @@ RUN mvn dependency:go-offline -B
 
 # 3. Sau đó mới copy source code và build
 COPY src ./src
-RUN cp src/main/resources/application.yaml.example src/main/resources/application.yaml
+RUN if [ ! -f src/main/resources/application.yaml ]; then cp src/main/resources/application.yaml.example src/main/resources/application.yaml; fi
 RUN mvn clean package -DskipTests
 
 FROM eclipse-temurin:21-jre-alpine
