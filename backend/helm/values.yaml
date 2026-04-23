@@ -15,35 +15,41 @@ backend:
     port: 8080
   environment:
     SPRING_PROFILES_ACTIVE: "default"
-    CORS_ALLOWED_ORIGINS: "*"
-    APP_SEEDER_ENABLED: "false"
-    # Postgres
-    POSTGRES_HOST: "unipoint-database"
-    POSTGRES_PORT: "5432"
-    POSTGRES_DB: unipointdb
-    POSTGRES_USER: group06
+    # Datasource
+    SPRING_DATASOURCE_URL: "jdbc:postgresql://unipoint-database:5432/unipointdb?prepareThreshold=0"
+    SPRING_DATASOURCE_USERNAME: "group06"
     # Redis
-    REDIS_HOST: "unipoint-redis"
-    REDIS_PORT: "6379"
+    SPRING_DATA_REDIS_HOST: "unipoint-redis"
+    SPRING_DATA_REDIS_PORT: "6379"
     # RabbitMQ
-    RABBITMQ_HOST: "unipoint-rabbitmq"
-    RABBITMQ_PORT: "5672"
-    RABBITMQ_USERNAME: guest
-    RABBITMQ_VIRTUAL_HOST: "/"
-    RABBITMQ_SSL_ENABLED: "false"
-    # OAuth2 & Device
-    OAUTH2_REDIRECT_URL: "http://localhost:3000/oauth-success"
-    OAUTH2_REDIRECT_URI: "http://localhost:8080/api/login/oauth2/code/microsoft"
-    DEVICE_COOKIE_NAME: "device_token"
-    DEVICE_COOKIE_SECURE: "false"
+    SPRING_RABBITMQ_HOST: "unipoint-rabbitmq"
+    SPRING_RABBITMQ_PORT: "5672"
+    SPRING_RABBITMQ_USERNAME: "guest"
+    SPRING_RABBITMQ_VIRTUAL_HOST: "/"
+    SPRING_RABBITMQ_SSL_ENABLED: "false"
+    # Mail
+    SPRING_MAIL_HOST: "smtp.gmail.com"
+    SPRING_MAIL_PORT: "587"
+    SPRING_MAIL_USERNAME: ""
+    # App
+    CORS_ALLOWED_ORIGINS: "*"
+    SPRING_APP_SEEDER_ENABLED: "false"
+    # OAuth2
+    SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_MICROSOFT_REDIRECT_URI: "http://localhost:8080/api/login/oauth2/code/microsoft"
+    SPRING_APP_OAUTH2_REDIRECT_URL: "http://localhost:3000/oauth-success"
+    # Device
+    DEVICE_SECURITY_COOKIE_NAME: "device_token"
+    DEVICE_SECURITY_COOKIE_SECURE: "false"
     DEVICE_BINDING_TTL_MS: "604800000"
+    # JWT
     JWT_EXPIRATION_MS: "86400000"
     JWT_REFRESH_EXPIRATION_MS: "604800000"
   secrets:
-    POSTGRES_PASSWORD: ttcs_2026
-    REDIS_PASSWORD: TTCS_2026
-    RABBITMQ_PASSWORD: guest
-    JWT_SECRET: GenerateYourOwnSecureSecretKeyHereMinimum32Chars
-    DEVICE_HMAC_SECRET: ChangeThisHMACSecretKeyForProduction
-    MICROSOFT_CLIENT_ID: ""
-    MICROSOFT_CLIENT_SECRET: ""
+    SPRING_DATASOURCE_PASSWORD: "ttcs_2026"
+    SPRING_DATA_REDIS_PASSWORD: "TTCS_2026"
+    SPRING_RABBITMQ_PASSWORD: "guest"
+    SPRING_MAIL_PASSWORD: ""
+    JWT_SECRET: "GenerateYourOwnSecureSecretKeyHereMinimum32Chars"
+    DEVICE_SECURITY_HMAC_SECRET: "ChangeThisHMACSecretKeyForProduction"
+    SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_MICROSOFT_CLIENT_ID: ""
+    SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_MICROSOFT_CLIENT_SECRET: ""

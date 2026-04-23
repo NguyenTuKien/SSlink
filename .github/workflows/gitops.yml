@@ -12,6 +12,7 @@ permissions:
   checks: write
   pull-requests: write
   statuses: write
+  packages: write
 
 jobs:
   unit_test_job:
@@ -120,15 +121,16 @@ jobs:
       github.event_name == 'pull_request'
     env:
       TAG: ${{ needs.tag_job.outputs.docker_tag }}
-      REGISTRY_IMAGE: ${{ vars.DOCKER_REGISTRY }}
+      REGISTRY_IMAGE: ghcr.io/${{ github.repository_owner }}
     steps:
       - name: Checkout source code
         uses: actions/checkout@v4
-      - name: Log in to Docker Registry
+      - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
         with:
-          username: ${{ vars.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
       - name: Build and Push Backend
         run: |
           docker pull $REGISTRY_IMAGE/ttcs-backend:$TAG || true
@@ -155,34 +157,42 @@ jobs:
       github.event_name == 'pull_request'
     env:
       TAG: ${{ needs.tag_job.outputs.docker_tag }}
-      REGISTRY_IMAGE: ${{ vars.DOCKER_REGISTRY }}
+      REGISTRY_IMAGE: ghcr.io/${{ github.repository_owner }}
     steps:
       - name: Checkout source code
         uses: actions/checkout@v4
 
-      - name: Log in to Docker Registry
+      - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
         with:
-          username: ${{ vars.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup Environment Variables
+        env:
+          ENV_CONTENT: ${{ secrets.ENV_FILE }}
         run: |
-          if [ -z "${{ secrets.ENV_FILE }}" ]; then
+          if [ -z "$ENV_CONTENT" ]; then
             echo "ERROR: ENV_FILE secret is not set in GitHub"
             exit 1
           fi
-          
-          echo "${{ secrets.ENV_FILE }}" > .env
-          
-          echo "TAG=$TAG" >> .env
-          echo "DOCKER_REGISTRY=$REGISTRY_IMAGE" >> .env
+
+          # Ghi nội dung secret ENV_FILE ra file .env (giống cms-backend)
+          printf '%s\n' "$ENV_CONTENT" > .env
+
+      - name: Pull and Retag Images from GHCR
+        run: |
+          # Pull từ GHCR rồi re-tag sang tên local mà docker-compose sử dụng
+          docker pull $REGISTRY_IMAGE/ttcs-backend:$TAG
+          docker image tag $REGISTRY_IMAGE/ttcs-backend:$TAG ttcs-backend:latest
+
+          docker pull $REGISTRY_IMAGE/ttcs-frontend:$TAG
+          docker image tag $REGISTRY_IMAGE/ttcs-frontend:$TAG ttcs-frontend:latest
 
       - name: Start services with Docker Compose
-        run: |
-          docker compose pull
-          docker compose up -d --no-build
-          
+        run: docker compose up -d --no-build
+
       - name: Wait and Check Logs
         run: |
           sleep 20
@@ -198,6 +208,8 @@ jobs:
         run: |
           docker compose down --volumes --rmi local
           docker system prune -a -f
+
+
 
   code_quality_scan:
     name: Code Quality Scan with SonarCloud
@@ -242,16 +254,17 @@ jobs:
     continue-on-error: true  
     env:
       TAG: ${{ needs.tag_job.outputs.docker_tag }}
-      REGISTRY_IMAGE: ${{ vars.DOCKER_REGISTRY }}
+      REGISTRY_IMAGE: ghcr.io/${{ github.repository_owner }}
     steps:
       - name: Checkout source code
         uses: actions/checkout@v4
         
-      - name: Log in to Docker Registry
+      - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
         with:
-          username: ${{ vars.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
           
       - name: Run Trivy vulnerability scanner - Filesystem
         uses: aquasecurity/trivy-action@master
