@@ -1,9 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { getStudentNotificationUnreadCount, getStudentNotifications } from "../api/notificationStatisticsApi";
-import { sendNativeNotification } from "../shared/utils/sendNotification";
-import { useRef } from "react";
+import { getStudentNotificationUnreadCount } from "../api/notificationStatisticsApi";
 import StudentDashboard from "../features/student/components/StudentDashboard";
 import QRScanner from "../features/student/components/QRScanner";
 import StudentMobileNav from "../features/student/components/StudentMobileNav";
@@ -67,47 +65,26 @@ export default function StudentPage() {
 
   const [activeFeature, setActiveFeature] = useState("dashboard");
   const [studentUnreadCount, setStudentUnreadCount] = useState(0);
-  const notifiedIdsRef = useRef(new Set());
 
   useEffect(() => {
     let ignore = false;
 
-    async function checkNewNotifications() {
+    async function fetchUnreadCount() {
       try {
-        const payload = await getStudentNotifications({ page: 0, size: 5 });
-        if (ignore || !payload) return;
-
-        const nextUnread = Number(payload.unreadCount || 0);
-        setStudentUnreadCount(nextUnread);
-
-        if (nextUnread > 0) {
-          const unreadItems = (payload.items || []).filter(item => !item.isRead);
-          if (unreadItems.length > 0) {
-            const latest = unreadItems[0];
-            if (!notifiedIdsRef.current.has(latest.recipientId)) {
-              sendNativeNotification(
-                `Thông báo mới: ${latest.title}`,
-                latest.content
-              );
-              // Mark all currently fetched unread items as notified for this session
-              unreadItems.forEach(item => notifiedIdsRef.current.add(item.recipientId));
-            }
-          }
+        const payload = await getStudentNotificationUnreadCount();
+        if (!ignore) {
+          setStudentUnreadCount(Number(payload?.unreadCount || 0));
         }
-      } catch (err) {
-        console.error("Failed to check notifications:", err);
+      } catch {
+        if (!ignore) {
+          setStudentUnreadCount(0);
+        }
       }
     }
 
-    // Initial check
-    checkNewNotifications();
-
-    // Poll every 60 seconds
-    const interval = setInterval(checkNewNotifications, 60000);
-
+    fetchUnreadCount();
     return () => {
       ignore = true;
-      clearInterval(interval);
     };
   }, []);
 
