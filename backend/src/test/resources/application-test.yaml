@@ -1,0 +1,56 @@
+# Configuration for Unit Tests
+spring:
+  profiles:
+    active: test
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: 
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: update
+  data:
+    redis:
+      host: localhost
+      port: 6379
+  rabbitmq:
+    host: localhost
+    port: 5672
+
+# Dummy secrets for test context loading
+jwt:
+  secret: "dummy_secret_for_unit_tests_must_be_at_least_32_chars_long"
+  expiration-ms: 3600000
+  refresh-expiration-ms: 86400000
+
+device:
+  security:
+    cookie-name: device_token
+    cookie-secure: false
+    hmac-secret: "dummy_hmac_secret_for_unit_tests_32_chars"
+  binding:
+    ttl-ms: 604800000
+
+cors:
+  allowed-origins: "*"
+
+spring:
+  mail:
+    host: localhost
+    port: 25
+    username: test
+    password: test
+  security:
+    oauth2:
+      client:
+        registration:
+          microsoft:
+            client-id: test
+            client-secret: test
+  app:
+    oauth2:
+      redirect:
+        url: http://localhost:3000/oauth-success
+
