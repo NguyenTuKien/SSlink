@@ -7,7 +7,7 @@ backend:
       maxSurge: 2
       maxUnavailable: 1
   image:
-    repository: ngtukien218/ttcs-backend
+    repository: ghcr.io/nguyentukien/unipoint-backend
     tag: latest
     pullPolicy: Always
   service:

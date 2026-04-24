@@ -2,47 +2,36 @@ services:
   database:
     image: postgres:alpine
     restart: always
-    ports:
-      - "5432:5432"
     volumes:
       - pg_data:/var/lib/postgresql
-    environment:
-      POSTGRES_DB: ${POSTGRES_DB:-mydatabase}
-      POSTGRES_USER: ${POSTGRES_USER:-myuser}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-mypassword}
+    env_file: .env
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-myuser} -d ${POSTGRES_DB:-mydatabase} -h localhost"]
       interval: 10s
       timeout: 5s
       retries: 5
     networks:
-      - ttcs
+      - unipoint-network
   
   redis:
     image: redis:7-alpine
     restart: always
-    ports:
-       - "6379:6379"
+    env_file: .env
     volumes:
       - redis_data:/data
-    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
+    command: /bin/sh -c 'redis-server --appendonly yes --requirepass "$${REDIS_PASSWORD}"'
     healthcheck:
-      test: ["CMD-SHELL", "redis-cli -a ${REDIS_PASSWORD} ping | grep PONG"]
+      test: ["CMD-SHELL", "redis-cli -a \"$${REDIS_PASSWORD}\" ping | grep PONG"]
       interval: 10s
       timeout: 5s
       retries: 5
     networks:
-      - ttcs
+      - unipoint-network
 
   rabbitmq:
     image: rabbitmq:3.12-management-alpine
     restart: always
-    ports:
-      - "5672:5672"    # Cổng AMQP
-      - "15672:15672"  # Cổng UI Management
-    environment:
-      RABBITMQ_DEFAULT_USER: guest
-      RABBITMQ_DEFAULT_PASS: guest
+    env_file: .env
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
     healthcheck:
@@ -51,25 +40,13 @@ services:
       timeout: 5s
       retries: 5
     networks:
-      - ttcs
+      - unipoint-network
 
   backend:
     build: ./backend
-    image: ttcs-backend
+    image: ${DOCKER_REGISTRY:-ghcr.io/nguyentukien}/unipoint-backend:${TAG:-latest}
     restart: always
-    ports:
-      - "8080:8080"
-    env_file:
-      - .env
-    environment:
-      POSTGRES_HOST: database
-      POSTGRES_PORT: 5432
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
-      RABBITMQ_HOST: rabbitmq
-      RABBITMQ_PORT: 5672
-      APP_SEEDER_ENABLED: true
-
+    env_file: .env
     depends_on:
       database:
         condition: service_healthy
@@ -85,14 +62,14 @@ services:
     volumes:
       - logs:/app/logs
     networks:
-      - ttcs
+      - unipoint-network
 
   frontend:
     build:
       context: ./frontend
       args:
         - VITE_API_PROXY_TARGET=http://backend:8080
-    image: ttcs-frontend
+    image: ${DOCKER_REGISTRY:-ghcr.io/nguyentukien}/unipoint-frontend:${TAG:-latest}
     restart: always
     ports:
       - "80:80"
@@ -100,16 +77,15 @@ services:
       backend:
         condition: service_healthy
     networks:
-      - ttcs
+      - unipoint-network
 
   cloudflare:
     image: cloudflare/cloudflared:2026.3.0
     restart: always
+    env_file: .env
     command: tunnel --no-autoupdate run --token ${CLOUDFLARE_TUNNEL_TOKEN}
-    # depends_on:
-    #   - frontend
     networks:
-      - ttcs
+      - unipoint-network
 
 volumes:
   logs:
@@ -118,7 +94,7 @@ volumes:
   rabbitmq_data:
 
 networks:
-  ttcs:
+  unipoint-network:
     driver: bridge
   
 

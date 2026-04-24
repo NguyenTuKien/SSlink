@@ -1,3 +1,5 @@
 **/.idea
 **/.env
 /thanh-nien-ptit-api
+**/application.yaml
+**/application-prod.yaml

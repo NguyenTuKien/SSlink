@@ -1,4 +1,4 @@
-name: CI pipeline for ttcs
+name: CI pipeline for UniPoint
 
 on:
   push:
@@ -112,7 +112,7 @@ jobs:
           fi
 
   build_job:
-    name: Build and Push Docker Images
+    name: Build Docker Images
     runs-on: ubuntu-latest 
     needs: [unit_test_job, tag_job]  
     if: >
@@ -124,8 +124,10 @@ jobs:
     steps:
       - name: Checkout source code
         uses: actions/checkout@v4
-      - name: Set lowercase registry image
-        run: echo "REGISTRY_IMAGE=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}" >> $GITHUB_ENV
+      - name: Convert repository owner to lowercase
+        run: echo "REGISTRY_IMAGE=ghcr.io/${OWNER,,}" >> ${GITHUB_ENV}
+        env:
+          OWNER: '${{ github.repository_owner }}'
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
         with:
@@ -134,22 +136,22 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Build and Push Backend
         run: |
-          docker pull $REGISTRY_IMAGE/ttcs-backend:$TAG || true
-          docker build --cache-from $REGISTRY_IMAGE/ttcs-backend:$TAG -t $REGISTRY_IMAGE/ttcs-backend:$TAG ./backend
-          docker push $REGISTRY_IMAGE/ttcs-backend:$TAG
+          docker pull $REGISTRY_IMAGE/unipoint-backend:$TAG || true
+          docker build --cache-from $REGISTRY_IMAGE/unipoint-backend:$TAG -t $REGISTRY_IMAGE/unipoint-backend:$TAG ./backend
+          docker push $REGISTRY_IMAGE/unipoint-backend:$TAG
 
       - name: Build and Push Frontend
         run: |
-          docker pull $REGISTRY_IMAGE/ttcs-frontend:$TAG || true
-          docker build --cache-from $REGISTRY_IMAGE/ttcs-frontend:$TAG -t $REGISTRY_IMAGE/ttcs-frontend:$TAG ./frontend
-          docker push $REGISTRY_IMAGE/ttcs-frontend:$TAG
+          docker pull $REGISTRY_IMAGE/unipoint-frontend:$TAG || true
+          docker build --cache-from $REGISTRY_IMAGE/unipoint-frontend:$TAG -t $REGISTRY_IMAGE/unipoint-frontend:$TAG ./frontend
+          docker push $REGISTRY_IMAGE/unipoint-frontend:$TAG
 
       - name: Cleanup Docker System
         if: always() 
         run: docker system prune -af
 
   integration_test_job:
-    name: Run Integration Tests on Environment
+    name: Integration Test
     runs-on: ubuntu-latest
     needs: [tag_job, build_job]
     if: >
@@ -161,8 +163,10 @@ jobs:
     steps:
       - name: Checkout source code
         uses: actions/checkout@v4
-      - name: Set lowercase registry image
-        run: echo "REGISTRY_IMAGE=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}" >> $GITHUB_ENV
+      - name: Convert repository owner to lowercase
+        run: echo "REGISTRY_IMAGE=ghcr.io/${OWNER,,}" >> ${GITHUB_ENV}
+        env:
+          OWNER: '${{ github.repository_owner }}'
 
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
@@ -185,10 +189,10 @@ jobs:
 
       - name: Pull and Retag Images from GHCR
         run: |
-          docker pull $REGISTRY_IMAGE/ttcs-backend:$TAG
-          docker image tag $REGISTRY_IMAGE/ttcs-backend:$TAG ttcs-backend:latest
-          docker pull $REGISTRY_IMAGE/ttcs-frontend:$TAG
-          docker image tag $REGISTRY_IMAGE/ttcs-frontend:$TAG ttcs-frontend:latest
+          docker pull $REGISTRY_IMAGE/unipoint-backend:$TAG
+          docker image tag $REGISTRY_IMAGE/unipoint-backend:$TAG unipoint-backend:latest
+          docker pull $REGISTRY_IMAGE/unipoint-frontend:$TAG
+          docker image tag $REGISTRY_IMAGE/unipoint-frontend:$TAG unipoint-frontend:latest
 
       - name: Start services with Docker Compose
         run: |
@@ -196,13 +200,21 @@ jobs:
           
       - name: Wait and Check Logs
         run: |
-          sleep 20
+          sleep 30
           docker compose ps
           docker compose logs --tail=200 backend || true
 
       - name: Check Health and Accessibility
         run: |
-          curl -f http://localhost:80/ || (echo "Frontend unreachable" && exit 1)
+          # Kiểm tra trạng thái của container backend từ docker compose ps
+          # Docker compose healthcheck sẽ đảm bảo backend sẵn sàng
+          if docker compose ps backend | grep -q "healthy"; then
+            echo "Backend is healthy!"
+          else
+            echo "Backend is NOT healthy!"
+            docker compose logs backend
+            exit 1
+          fi
 
       - name: Cleanup Docker System
         if: always()
@@ -256,8 +268,10 @@ jobs:
     steps:
       - name: Checkout source code
         uses: actions/checkout@v4
-      - name: Set lowercase registry image
-        run: echo "REGISTRY_IMAGE=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}" >> $GITHUB_ENV
+      - name: Convert repository owner to lowercase
+        run: echo "REGISTRY_IMAGE=ghcr.io/${OWNER,,}" >> ${GITHUB_ENV}
+        env:
+          OWNER: '${{ github.repository_owner }}'
         
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
@@ -277,7 +291,14 @@ jobs:
       - name: Run Trivy vulnerability scanner - Backend Image
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: '${{ env.REGISTRY_IMAGE }}/ttcs-backend:${{ env.TAG }}'
+          image-ref: '${{ env.REGISTRY_IMAGE }}/unipoint-backend:${{ env.TAG }}'
+          severity: 'HIGH,CRITICAL'
+          exit-code: '0'
+
+      - name: Run Trivy vulnerability scanner - Frontend Image
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: '${{ env.REGISTRY_IMAGE }}/unipoint-frontend:${{ env.TAG }}'
           severity: 'HIGH,CRITICAL'
           exit-code: '0'
 
