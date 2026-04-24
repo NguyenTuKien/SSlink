@@ -211,11 +211,11 @@ export default function LecturerNotificationCenter() {
 
                 {result && (
                     <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-                        <p className="font-semibold">Gửi thông báo thành công</p>
+                        <p className="font-semibold">Thông báo đã được ghi nhận</p>
                         <p>
-                            notificationId: {result.notificationId} - Người nhận: {result.totalRecipients} - Email gửi thành công:
+                            notificationId: {result.notificationId} - Người nhận: {result.totalRecipients} - Email đã xếp hàng:
                             {" "}
-                            {result.sentEmailCount}/{result.totalRecipients}
+                            {result.queuedEmailCount}/{result.totalRecipients}
                         </p>
                     </div>
                 )}
