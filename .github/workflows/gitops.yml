@@ -189,10 +189,10 @@ jobs:
 
       - name: Pull and Retag Images from GHCR
         run: |
-          docker pull $REGISTRY_IMAGE/ttcs-backend:$TAG
-          docker image tag $REGISTRY_IMAGE/ttcs-backend:$TAG ttcs-backend:latest
-          docker pull $REGISTRY_IMAGE/ttcs-frontend:$TAG
-          docker image tag $REGISTRY_IMAGE/ttcs-frontend:$TAG ttcs-frontend:latest
+          docker pull $REGISTRY_IMAGE/unipoint-backend:$TAG
+          docker image tag $REGISTRY_IMAGE/unipoint-backend:$TAG unipoint-backend:latest
+          docker pull $REGISTRY_IMAGE/unipoint-frontend:$TAG
+          docker image tag $REGISTRY_IMAGE/unipoint-frontend:$TAG unipoint-frontend:latest
 
       - name: Start services with Docker Compose
         run: |
