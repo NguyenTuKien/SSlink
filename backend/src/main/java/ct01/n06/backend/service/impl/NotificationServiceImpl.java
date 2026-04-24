@@ -14,17 +14,22 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 
+import org.springframework.amqp.AmqpException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import ct01.n06.backend.dto.common.SimpleMessageResponse;
 import ct01.n06.backend.dto.lecturer.CreateLecturerNotificationRequest;
 import ct01.n06.backend.dto.lecturer.LecturerNotificationCreateResponse;
+import ct01.n06.backend.dto.mail.NotificationEmailJob;
+import ct01.n06.backend.dto.mail.NotificationEmailJob.Recipient;
 import ct01.n06.backend.dto.student.StudentNotificationListResponse;
 import ct01.n06.backend.dto.student.StudentNotificationListResponse.StudentNotificationItem;
 import ct01.n06.backend.dto.student.StudentNotificationUnreadResponse;
@@ -42,9 +47,7 @@ import ct01.n06.backend.repository.LecturerRepository;
 import ct01.n06.backend.repository.NotificationRecipientRepository;
 import ct01.n06.backend.repository.NotificationRepository;
 import ct01.n06.backend.repository.StudentRepository;
-import ct01.n06.backend.service.EmailService;
-import ct01.n06.backend.service.EmailService.EmailRecipient;
-import ct01.n06.backend.service.EmailService.EmailSendSummary;
+import ct01.n06.backend.service.EmailQueueService;
 import ct01.n06.backend.service.NotificationService;
 import ct01.n06.backend.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -63,7 +66,7 @@ public class NotificationServiceImpl implements NotificationService {
   private final NotificationRepository notificationRepository;
   private final NotificationRecipientRepository notificationRecipientRepository;
   private final LecturerRepository lecturerRepository;
-  private final EmailService emailService;
+  private final EmailQueueService emailQueueService;
 
   @Value("${notification.attachment.dir:./backend/storage/notifications}")
   private String attachmentDirectory;
@@ -123,7 +126,7 @@ public class NotificationServiceImpl implements NotificationService {
         .toList();
     notificationRecipientRepository.saveAll(recipientEntities);
 
-    EmailSendSummary emailSummary = sendNotificationEmail(savedNotification, recipients, attachment);
+    int queuedEmailCount = enqueueNotificationEmail(savedNotification, recipients, attachment);
 
     String createdAt = savedNotification.getCreatedAt() != null
         ? savedNotification.getCreatedAt().format(UI_TIME_FORMAT)
@@ -132,8 +135,8 @@ public class NotificationServiceImpl implements NotificationService {
     return new LecturerNotificationCreateResponse(
         savedNotification.getId(),
         recipients.size(),
-        emailSummary.sentCount(),
-        emailSummary.failedCount(),
+        queuedEmailCount,
+        queuedEmailCount == recipients.size() ? 0 : recipients.size() - queuedEmailCount,
         createdAt,
         savedNotification.getAttachmentName()
     );
@@ -258,14 +261,15 @@ public class NotificationServiceImpl implements NotificationService {
       }
 
       String recipientName = StringUtils.hasText(resolvedStudent.getFullName()) ? resolvedStudent.getFullName() : "Bạn";
-      emailService.sendNotificationEmail(
+      NotificationEmailJob job = new NotificationEmailJob(
           "[UniPoint] " + title,
           content,
           "Hệ thống UniPoint",
-          List.of(new EmailRecipient(email.trim(), recipientName)),
+          List.of(new Recipient(email.trim(), recipientName)),
           null,
           null
       );
+      emailQueueService.enqueueNotificationEmail(job);
     } catch (Exception ex) {
       log.warn("Gửi email thông báo check-in thất bại: studentId={}, eventId={}",
           student.getId(),
@@ -335,17 +339,17 @@ public class NotificationServiceImpl implements NotificationService {
     return filtered;
   }
 
-  private EmailSendSummary sendNotificationEmail(
+  private int enqueueNotificationEmail(
       NotificationEntity notification,
       List<StudentEntity> recipients,
       StoredAttachment attachment
   ) {
-    Map<String, EmailRecipient> uniqueRecipients = new LinkedHashMap<>();
+    Map<String, Recipient> uniqueRecipients = new LinkedHashMap<>();
 
     for (StudentEntity student : recipients) {
       String email = student.getUserEntity().getEmail();
       String normalizedEmail = email.trim().toLowerCase(Locale.ROOT);
-      uniqueRecipients.putIfAbsent(normalizedEmail, new EmailRecipient(email.trim(), student.getFullName()));
+      uniqueRecipients.putIfAbsent(normalizedEmail, new Recipient(email.trim(), student.getFullName()));
     }
 
     String senderName = "Giảng viên";
@@ -356,14 +360,42 @@ public class NotificationServiceImpl implements NotificationService {
       }
     }
 
-    return emailService.sendNotificationEmail(
+    NotificationEmailJob job = new NotificationEmailJob(
         "[UniPoint] " + notification.getTitle(),
         notification.getContent(),
         senderName,
         new ArrayList<>(uniqueRecipients.values()),
         attachment != null ? attachment.fileName() : null,
-        attachment != null ? attachment.absolutePath() : null
+        attachment != null ? attachment.absolutePath().toString() : null
     );
+
+    if (!TransactionSynchronizationManager.isSynchronizationActive()) {
+      try {
+        emailQueueService.enqueueNotificationEmail(job);
+        return uniqueRecipients.size();
+      } catch (AmqpException ex) {
+        log.error("Không thể đẩy email vào queue", ex);
+        return 0;
+      }
+    }
+
+    TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+      @Override
+      public void afterCommit() {
+        try {
+          emailQueueService.enqueueNotificationEmail(job);
+          log.info(
+              "Đã đẩy email thông báo vào queue: notificationId={}, recipients={}",
+              notification.getId(),
+              uniqueRecipients.size()
+          );
+        } catch (AmqpException ex) {
+          log.error("Không thể đẩy email thông báo vào queue: notificationId={}", notification.getId(), ex);
+        }
+      }
+    });
+
+    return uniqueRecipients.size();
   }
 
   private StoredAttachment storeAttachment(MultipartFile file) {

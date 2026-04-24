@@ -153,15 +153,30 @@
   background: #fff;
   border: 1px solid #e3e8ef;
   border-radius: 16px;
-  padding: 16px;
+  padding: 12px;
+}
+
+@media (min-width: 560px) {
+  .lecturer-section {
+    padding: 16px;
+  }
 }
 
 .section-head {
   display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  align-items: center;
+  flex-direction: column;
+  gap: 10px;
+  align-items: flex-start;
   flex-wrap: wrap;
+}
+
+@media (min-width: 560px) {
+  .section-head {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+  }
 }
 
 .section-head h1 {
@@ -176,9 +191,27 @@
 
 .head-actions {
   display: flex;
-  gap: 10px;
+  gap: 8px;
   align-items: center;
   flex-wrap: wrap;
+  width: 100%;
+}
+
+.head-actions .btn-danger,
+.head-actions .btn-outline {
+  flex: 1;
+  text-align: center;
+}
+
+@media (min-width: 560px) {
+  .head-actions {
+    width: auto;
+  }
+
+  .head-actions .btn-danger,
+  .head-actions .btn-outline {
+    flex: none;
+  }
 }
 
 .lecturer-layout .btn-danger,
@@ -219,26 +252,39 @@
 }
 
 .summary-pills {
-  margin-top: 12px;
+  margin-top: 10px;
   display: flex;
-  gap: 10px;
+  gap: 8px;
   flex-wrap: wrap;
 }
 
 .summary-pills span {
   border: 1px solid #e3e8ef;
   border-radius: 999px;
-  padding: 8px 12px;
+  padding: 6px 10px;
   background: #f9fbff;
   color: #4f607a;
   font-weight: 700;
+  font-size: 0.85rem;
 }
 
 .filter-row {
   margin-top: 12px;
   display: grid;
-  grid-template-columns: 2fr 1fr 1fr 1fr;
+  grid-template-columns: 1fr;
   gap: 10px;
+}
+
+@media (min-width: 560px) {
+  .filter-row {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (min-width: 900px) {
+  .filter-row {
+    grid-template-columns: 2fr 1fr 1fr 1fr;
+  }
 }
 
 .filter-row input,
@@ -383,8 +429,9 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 12px;
-  padding: 12px 14px;
+  gap: 8px;
+  padding: 10px 14px;
+  flex-wrap: wrap;
 }
 
 .table-footer span {
@@ -463,10 +510,6 @@
   .storage-card {
     margin-top: 0;
   }
-
-  .filter-row {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
 }
 
 @media (max-width: 760px) {
@@ -475,12 +518,135 @@
     align-items: flex-start;
   }
 
-  .filter-row {
-    grid-template-columns: 1fr;
-  }
-
   .table-footer {
     flex-direction: column;
     align-items: flex-start;
+  }
+}
+
+/* ── Mobile card layout ── */
+.student-cards {
+  display: none;
+  margin-top: 12px;
+  gap: 10px;
+  flex-direction: column;
+}
+
+.student-cards__empty {
+  padding: 24px;
+  text-align: center;
+  color: #6e7d95;
+  font-size: 0.9rem;
+}
+
+.student-card {
+  border: 1px solid #e3e8ef;
+  border-radius: 14px;
+  background: #fff;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.student-card__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.student-card__info {
+  min-width: 0;
+}
+
+.student-card__info strong {
+  display: block;
+  font-size: 0.95rem;
+  color: #1f2b42;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.student-card__info small {
+  display: block;
+  font-size: 0.78rem;
+  color: #718099;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.student-card__badges {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.student-card__meta {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  font-size: 0.8rem;
+  color: #5d6f89;
+}
+
+.student-card__actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  padding-top: 8px;
+  border-top: 1px solid #edf1f7;
+}
+
+.student-card__actions button {
+  flex: 1;
+  min-width: fit-content;
+  border: 1px solid #d5deea;
+  border-radius: 8px;
+  background: #fff;
+  color: #3f4f6b;
+  padding: 6px 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.student-card__actions button:hover {
+  background: #f4f7fc;
+}
+
+.student-card__actions button.danger {
+  color: #b42318;
+  border-color: #f0c3c1;
+}
+
+.student-card__actions button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Mobile pagination (below cards) */
+.mobile-pagination {
+  display: none;
+  margin-top: 8px;
+}
+
+/* Responsive toggle */
+@media (max-width: 767px) {
+  .student-cards {
+    display: flex;
+  }
+
+  .table-panel {
+    display: none;
+  }
+
+  .mobile-pagination {
+    display: flex;
   }
 }

@@ -341,6 +341,80 @@ export default function LecturerStudentManagement() {
 
         {flash.message && <div className={`flash ${flash.type}`}>{flash.message}</div>}
 
+        {/* ── MOBILE: Card layout (< 768px) ── */}
+        <div className="student-cards">
+          {pageRows.length === 0 ? (
+            <div className="student-cards__empty">Không có sinh viên phù hợp bộ lọc.</div>
+          ) : pageRows.map((row) => (
+            <div key={row.studentId} className="student-card">
+              {/* Name + badges */}
+              <div className="student-card__header">
+                <div className="student-card__info">
+                  <strong>{row.fullName}</strong>
+                  <small>{row.email}</small>
+                </div>
+                <div className="student-card__badges">
+                  <span className={`pill role ${row.role.toLowerCase()}`}>
+                    {ROLE_LABEL[row.role] || row.role}
+                  </span>
+                  <span className={`pill status ${row.accountStatus.toLowerCase()}`}>
+                    {STATUS_LABEL[row.accountStatus] || row.accountStatus}
+                  </span>
+                </div>
+              </div>
+
+              {/* Meta */}
+              <div className="student-card__meta">
+                <span>📋 {row.studentCode} · {row.classCode}</span>
+                <span>⭐ {row.totalPoint ?? 0} điểm</span>
+                <span>🎯 {row.mandatoryStatus}</span>
+              </div>
+
+              {/* Actions */}
+              <div className="student-card__actions">
+                <button
+                  type="button"
+                  disabled={busy}
+                  title="Gán lớp trưởng"
+                  onClick={() =>
+                    runAction(
+                      () => apiRequest(`/lecturer/students/${row.studentId}/monitor?lecturerId=${lecturerId}`, { method: "PUT" }),
+                      `Đã gán ${row.fullName} làm lớp trưởng.`,
+                    )
+                  }
+                >☆ Lớp trưởng</button>
+                <button
+                  type="button"
+                  disabled={busy}
+                  title={row.accountStatus === "LOCKED" ? "Mở khóa" : "Khóa"}
+                  onClick={() =>
+                    runAction(
+                      () => apiRequest(`/lecturer/students/${row.studentId}/status?lecturerId=${lecturerId}`, {
+                        method: "PUT",
+                        body: JSON.stringify({ status: row.accountStatus === "LOCKED" ? "ACTIVE" : "LOCKED" }),
+                      }),
+                      row.accountStatus === "LOCKED" ? `Đã mở khóa ${row.fullName}.` : `Đã khóa ${row.fullName}.`,
+                    )
+                  }
+                >{row.accountStatus === "LOCKED" ? "🔓 Mở khóa" : "🔒 Khóa"}</button>
+                <button
+                  type="button"
+                  disabled={busy}
+                  className="danger"
+                  title="Xóa mềm"
+                  onClick={() =>
+                    runAction(
+                      () => apiRequest(`/lecturer/students/${row.studentId}?lecturerId=${lecturerId}`, { method: "DELETE" }),
+                      `Đã xóa mềm ${row.fullName}.`,
+                    )
+                  }
+                >🗑 Xóa</button>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* ── DESKTOP: Table layout (≥ 768px) ── */}
         <div className="table-panel">
           <table>
             <thead>
@@ -390,41 +464,25 @@ export default function LecturerStudentManagement() {
                           title="Gán lớp trưởng"
                           onClick={() =>
                             runAction(
-                              () =>
-                                apiRequest(
-                                  `/lecturer/students/${row.studentId}/monitor?lecturerId=${lecturerId}`,
-                                  { method: "PUT" },
-                                ),
+                              () => apiRequest(`/lecturer/students/${row.studentId}/monitor?lecturerId=${lecturerId}`, { method: "PUT" }),
                               `Đã gán ${row.fullName} làm lớp trưởng.`,
                             )
                           }
-                        >
-                          ☆
-                        </button>
+                        >☆</button>
                         <button
                           type="button"
                           disabled={busy}
                           title={row.accountStatus === "LOCKED" ? "Mở khóa" : "Khóa"}
                           onClick={() =>
                             runAction(
-                              () =>
-                                apiRequest(
-                                  `/lecturer/students/${row.studentId}/status?lecturerId=${lecturerId}`,
-                                  {
-                                    method: "PUT",
-                                    body: JSON.stringify({
-                                      status: row.accountStatus === "LOCKED" ? "ACTIVE" : "LOCKED",
-                                    }),
-                                  },
-                                ),
-                              row.accountStatus === "LOCKED"
-                                ? `Đã mở khóa ${row.fullName}.`
-                                : `Đã khóa ${row.fullName}.`,
+                              () => apiRequest(`/lecturer/students/${row.studentId}/status?lecturerId=${lecturerId}`, {
+                                method: "PUT",
+                                body: JSON.stringify({ status: row.accountStatus === "LOCKED" ? "ACTIVE" : "LOCKED" }),
+                              }),
+                              row.accountStatus === "LOCKED" ? `Đã mở khóa ${row.fullName}.` : `Đã khóa ${row.fullName}.`,
                             )
                           }
-                        >
-                          {row.accountStatus === "LOCKED" ? "🔓" : "🔒"}
-                        </button>
+                        >{row.accountStatus === "LOCKED" ? "🔓" : "🔒"}</button>
                         <button
                           type="button"
                           disabled={busy}
@@ -432,17 +490,11 @@ export default function LecturerStudentManagement() {
                           title="Xóa mềm"
                           onClick={() =>
                             runAction(
-                              () =>
-                                apiRequest(
-                                  `/lecturer/students/${row.studentId}?lecturerId=${lecturerId}`,
-                                  { method: "DELETE" },
-                                ),
+                              () => apiRequest(`/lecturer/students/${row.studentId}?lecturerId=${lecturerId}`, { method: "DELETE" }),
                               `Đã xóa mềm ${row.fullName}.`,
                             )
                           }
-                        >
-                          🗑
-                        </button>
+                        >🗑</button>
                       </div>
                     </td>
                   </tr>
@@ -456,24 +508,24 @@ export default function LecturerStudentManagement() {
               Hiển thị {(currentPage - 1) * PAGE_SIZE + (pageRows.length ? 1 : 0)} - {(currentPage - 1) * PAGE_SIZE + pageRows.length} trong tổng số {filteredCount} sinh viên
             </span>
             <div className="pagination">
-              <button
-                type="button"
-                onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
-                disabled={currentPage === 1}
-              >
-                ‹
-              </button>
+              <button type="button" onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))} disabled={currentPage === 1}>‹</button>
               <span>{currentPage}</span>
-              <button
-                type="button"
-                onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
-                disabled={currentPage === totalPages}
-              >
-                ›
-              </button>
+              <button type="button" onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))} disabled={currentPage === totalPages}>›</button>
             </div>
           </footer>
         </div>
+
+        {/* Mobile pagination */}
+        <footer className="table-footer mobile-pagination">
+          <span>
+            Trang {currentPage} / {totalPages} · {filteredCount} sinh viên
+          </span>
+          <div className="pagination">
+            <button type="button" onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))} disabled={currentPage === 1}>‹</button>
+            <span>{currentPage}</span>
+            <button type="button" onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))} disabled={currentPage === totalPages}>›</button>
+          </div>
+        </footer>
       </section>
 
       {showManualModal && (

@@ -310,10 +310,10 @@ function CreateEventModal({ isOpen, onClose, onSuccess, initialEvent = null }) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-2 md:p-4">
-      <div className="bg-white dark:bg-slate-900 w-full max-w-5xl rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col max-h-[80vh] md:max-h-[85vh]">
+    <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4">
+      <div className="bg-white dark:bg-slate-900 w-full max-w-5xl rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col max-h-[90vh] sm:max-h-[85vh]">
         {/* Header */}
-        <div className="px-4 md:px-8 py-3 md:py-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between flex-shrink-0">
+        <div className="px-4 sm:px-6 md:px-8 py-3 md:py-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between flex-shrink-0">
           <div>
             <h3 className="text-xl font-bold">{isEditMode ? 'Cập nhật sự kiện' : 'Tạo sự kiện mới'}</h3>
             <p className="text-sm text-slate-500 mt-0.5">
@@ -331,7 +331,7 @@ function CreateEventModal({ isOpen, onClose, onSuccess, initialEvent = null }) {
 
         {/* Scrollable body */}
         <div className="overflow-y-auto flex-1">
-          <form id="create-event-form" className="px-4 md:px-8 py-3 md:py-6" onSubmit={handleSubmit}>
+          <form id="create-event-form" className="px-4 sm:px-6 md:px-8 py-3 md:py-6" onSubmit={handleSubmit}>
             {error && (
               <div className="text-sm text-red-600 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg px-4 py-3 mb-6">
                 {error}
@@ -339,7 +339,7 @@ function CreateEventModal({ isOpen, onClose, onSuccess, initialEvent = null }) {
             )}
 
             {/* Desktop: 2 columns side by side | Mobile: single column */}
-            <div className="grid grid-cols-1 md:grid-cols-2 md:gap-x-8 gap-y-3 md:gap-y-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 sm:gap-x-6 md:gap-x-8 gap-y-3 sm:gap-y-4 md:gap-y-5">
 
               {/* ── LEFT COLUMN ── */}
               <div className="flex flex-col gap-3 md:gap-5">
@@ -392,10 +392,10 @@ function CreateEventModal({ isOpen, onClose, onSuccess, initialEvent = null }) {
                     Mô tả sự kiện
                   </label>
                   <textarea
-                    className="w-full flex-1 border border-slate-200 dark:border-slate-700 dark:bg-slate-800 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary px-4 py-2.5 resize-none transition"
+                    className="w-full flex-1 border border-slate-200 dark:border-slate-700 dark:bg-slate-800 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary px-3 py-2 md:px-4 md:py-2.5 resize-none transition"
                     id="event-description"
                     placeholder="Mô tả nội dung chính của sự kiện..."
-                    rows="3"
+                    rows="2"
                     value={formData.description}
                     onChange={handleChange}
                   />
@@ -529,7 +529,7 @@ function CreateEventModal({ isOpen, onClose, onSuccess, initialEvent = null }) {
         </div>
 
         {/* Footer */}
-        <div className="px-4 md:px-8 py-3 md:py-4 flex items-center justify-end gap-3 border-t border-slate-100 dark:border-slate-800 flex-shrink-0">
+        <div className="px-4 sm:px-6 md:px-8 py-3 md:py-4 flex items-center justify-end gap-2 sm:gap-3 border-t border-slate-100 dark:border-slate-800 flex-shrink-0">
           <button
             className="px-6 py-2.5 text-sm font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
             onClick={handleClose}
