@@ -159,7 +159,6 @@
                         <exclude>ct01/n06/backend/util/**</exclude>
                         <exclude>ct01/n06/backend/facade/**</exclude>
                         <exclude>ct01/n06/backend/consumer/**</exclude>
-                        <exclude>ct01/n06/backend/controller/**</exclude>
                     </excludes>
                 </configuration>
                 <executions>
