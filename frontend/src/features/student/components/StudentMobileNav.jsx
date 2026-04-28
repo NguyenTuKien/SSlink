@@ -40,6 +40,14 @@ export default function StudentMobileNav({ activeFeature, onSelect, onLogout, un
       </button>
       <button
         type="button"
+        onClick={() => onSelect("face-profile")}
+        className={`flex flex-col items-center gap-1 ${activeFeature === "face-profile" ? "text-primary" : "text-slate-400"}`}
+      >
+        <span className="material-symbols-outlined">face</span>
+        <span className="text-[10px] font-medium">Face</span>
+      </button>
+      <button
+        type="button"
         onClick={() => onSelect("history")}
         className={`flex flex-col items-center gap-1 ${activeFeature === "history" ? "text-primary" : "text-slate-400"}`}
       >

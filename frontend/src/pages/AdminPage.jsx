@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import AdminDashboard from "../features/admin/components/AdminDashboard";
@@ -28,6 +28,7 @@ export default function AdminPage() {
   const lecturerWorkspace = useAdminLecturerWorkspace();
   const studentWorkspace = useAdminStudentWorkspace();
   const [activeFeature, setActiveFeature] = useState("dashboard");
+  const [mountedFeatures, setMountedFeatures] = useState(() => new Set(["dashboard"]));
   const fullNameLabel = user?.displayName || "Administrator";
   const userIdLabel = user?.profileCode || user?.userId || "admin";
   const avatarLetter = (fullNameLabel || "A").slice(0, 1).toUpperCase();
@@ -37,34 +38,53 @@ export default function AdminPage() {
     navigate("/auth", { replace: true });
   };
 
-  let FeatureComponent = AdminDashboard;
-  let featureProps = {
-    workspace: {
-      lecturerWorkspace,
-      studentWorkspace,
-    },
-    onNavigate: setActiveFeature,
-  };
+  useEffect(() => {
+    setMountedFeatures((prev) => {
+      if (prev.has(activeFeature)) {
+        return prev;
+      }
+      const next = new Set(prev);
+      next.add(activeFeature);
+      return next;
+    });
+  }, [activeFeature]);
 
-  if (activeFeature === "lecturers") {
-    FeatureComponent = AdminLecturerManagement;
-    featureProps = { workspace: lecturerWorkspace, onNavigate: setActiveFeature };
-  } else if (activeFeature === "students") {
-    FeatureComponent = AdminStudentManagement;
-    featureProps = { studentWorkspace, onNavigate: setActiveFeature };
-  } else if (activeFeature === "statistics") {
-    FeatureComponent = AdminStatistics;
-    featureProps = { lecturerWorkspace, studentWorkspace };
-  } else if (activeFeature === "semesters") {
-    FeatureComponent = AdminSemesterManagement;
-    featureProps = {};
-  } else if (activeFeature === "createLecturer") {
-    FeatureComponent = AdminLecturerForm;
-    featureProps = { workspace: lecturerWorkspace };
-  } else if (activeFeature === "createStudent") {
-    FeatureComponent = AdminStudentForm;
-    featureProps = { studentWorkspace };
-  }
+  const featureRegistry = {
+    dashboard: {
+      Component: AdminDashboard,
+      props: {
+        workspace: {
+          lecturerWorkspace,
+          studentWorkspace,
+        },
+        onNavigate: setActiveFeature,
+      },
+    },
+    lecturers: {
+      Component: AdminLecturerManagement,
+      props: { workspace: lecturerWorkspace, onNavigate: setActiveFeature },
+    },
+    students: {
+      Component: AdminStudentManagement,
+      props: { studentWorkspace, onNavigate: setActiveFeature },
+    },
+    semesters: {
+      Component: AdminSemesterManagement,
+      props: {},
+    },
+    statistics: {
+      Component: AdminStatistics,
+      props: { lecturerWorkspace, studentWorkspace },
+    },
+    createLecturer: {
+      Component: AdminLecturerForm,
+      props: { workspace: lecturerWorkspace },
+    },
+    createStudent: {
+      Component: AdminStudentForm,
+      props: { studentWorkspace },
+    },
+  };
 
   const handleSearchChange = (nextKeyword) => {
     lecturerWorkspace.setFilters((previous) => ({
@@ -102,7 +122,16 @@ export default function AdminPage() {
           studentStats={studentWorkspace.stats}
         />
         <div className="flex-1 overflow-y-auto p-4 md:p-8 pb-24 md:pb-8">
-          <FeatureComponent {...featureProps} />
+          {Object.entries(featureRegistry)
+            .filter(([key]) => mountedFeatures.has(key))
+            .map(([key, value]) => {
+              const FeatureComponent = value.Component;
+              return (
+                <div key={key} className={key === activeFeature ? "block" : "hidden"} aria-hidden={key !== activeFeature}>
+                  <FeatureComponent {...value.props} />
+                </div>
+              );
+            })}
         </div>
       </main>
 

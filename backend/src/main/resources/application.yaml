@@ -1,14 +1,19 @@
 spring:
   config:
-    import:
-      - optional:file:./UniPoint/backend/.env[.properties]
+    import: "optional:file:.env[.properties]"
   main:
     banner-mode: "off"
     time-zone: Asia/Ho_Chi_Minh
   application:
     name: backend
+
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
   datasource:
-    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${POSTGRES_DB:unipointdb}?prepareThreshold=0
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${POSTGRES_DB:postgres}?prepareThreshold=0
     username: ${POSTGRES_USER:postgres}
     password: ${POSTGRES_PASSWORD:password}
     driver-class-name: org.postgresql.Driver
@@ -81,17 +86,21 @@ spring:
             user-info-uri: https://graph.microsoft.com/oidc/userinfo
             user-name-attribute: sub
 
-  app:
-    seeder:
-      enabled: ${APP_SEEDER_ENABLED:false}
-    oauth2:
-      redirect:
-        url: ${OAUTH2_REDIRECT_URL:http://localhost:3000/oauth-success}
+app:
+  seeder:
+    enabled: ${APP_SEEDER_ENABLED:false}
+  oauth2:
+    redirect:
+      url: ${OAUTH2_REDIRECT_URL:http://localhost:3000/oauth-success}
+  response-cache:
+    enabled: ${APP_RESPONSE_CACHE_ENABLED:true}
+    ttl-seconds: ${APP_RESPONSE_CACHE_TTL_SECONDS:45}
+    max-body-bytes: ${APP_RESPONSE_CACHE_MAX_BODY_BYTES:524288}
 
 jwt:
   secret: ${JWT_SECRET:GenerateYourOwnSecureSecretKeyHereMinimum32Chars}
   expiration-ms: ${JWT_EXPIRATION_MS:3600000}
-  refresh-expiration-ms: ${JWT_REFRESH_EXPIRATION_MS:86400000}
+  refresh-expiration-ms: ${JWT_REFRESH_EXPIRATION_MS:86400}
 
 device:
   security:
@@ -114,6 +123,26 @@ notification:
   attachment:
     dir: ${NOTIFICATION_ATTACHMENT_DIR:./backend/storage/notifications}
     max-size-bytes: ${NOTIFICATION_ATTACHMENT_MAX_SIZE_BYTES:10485760}
+
+face:
+  integration:
+    base-url: ${AI_FACE_SERVICE_BASE_URL:http://localhost:8000}
+    auth-token: ${AI_FACE_SERVICE_AUTH_TOKEN:}
+    model-name: ${AI_FACE_MODEL_NAME:Facenet512}
+    detector-backend: ${AI_FACE_DETECTOR_BACKEND:retinaface}
+    enforce-detection: ${AI_FACE_ENFORCE_DETECTION:true}
+    connect-timeout-ms: ${AI_FACE_CONNECT_TIMEOUT_MS:8000}
+    read-timeout-ms: ${AI_FACE_READ_TIMEOUT_MS:15000}
+    match-threshold: ${AI_FACE_MATCH_THRESHOLD:0.72}
+    min-probe-quality-score: ${AI_FACE_MIN_PROBE_QUALITY_SCORE:0.45}
+    quality-strict-threshold: ${AI_FACE_QUALITY_STRICT_THRESHOLD:0.65}
+    low-quality-threshold-boost: ${AI_FACE_LOW_QUALITY_THRESHOLD_BOOST:0.04}
+    min-confidence-gap: ${AI_FACE_MIN_CONFIDENCE_GAP:0.03}
+    max-probe-faces-per-frame: ${AI_FACE_MAX_PROBE_FACES_PER_FRAME:6}
+    require-liveness: ${AI_FACE_REQUIRE_LIVENESS:false}
+    max-image-size-bytes: ${AI_FACE_MAX_IMAGE_SIZE_BYTES:2097152}
+    profile-cache-ttl-seconds: ${AI_FACE_PROFILE_CACHE_TTL_SECONDS:300}
+    session-candidate-cache-ttl-seconds: ${AI_FACE_SESSION_CANDIDATE_CACHE_TTL_SECONDS:90}
 
 logging:
   level:

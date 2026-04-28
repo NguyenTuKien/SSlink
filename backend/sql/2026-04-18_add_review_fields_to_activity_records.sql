@@ -1,0 +1,3 @@
+ALTER TABLE activity_records
+    ADD COLUMN IF NOT EXISTS review_note VARCHAR(1000),
+    ADD COLUMN IF NOT EXISTS reviewed_at TIMESTAMP;

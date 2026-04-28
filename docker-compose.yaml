@@ -53,6 +53,34 @@ services:
     networks:
       - ttcs
 
+  ai-service:
+    build: ./ai-service
+    image: ${DOCKER_REGISTRY:-ngtukien218}/ttcs-ai-service:${TAG:-latest}
+    restart: always
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      AI_SERVICE_AUTH_TOKEN: ${AI_FACE_SERVICE_AUTH_TOKEN:-}
+      AI_FACE_SERVICE_AUTH_TOKEN: ${AI_FACE_SERVICE_AUTH_TOKEN:-}
+      DEEPFACE_MODEL_NAME: ${AI_FACE_MODEL_NAME:-Facenet512}
+      DEEPFACE_DETECTOR_BACKEND: ${AI_FACE_DETECTOR_BACKEND:-retinaface}
+      DEEPFACE_ENFORCE_DETECTION: ${AI_FACE_ENFORCE_DETECTION:-true}
+      DEEPFACE_DISTANCE_THRESHOLD: ${DEEPFACE_DISTANCE_THRESHOLD:-0.4}
+      DEEPFACE_FACE_ID_TTL_SECONDS: ${DEEPFACE_FACE_ID_TTL_SECONDS:-900}
+      DEEPFACE_MAX_UPLOAD_BYTES: ${AI_FACE_MAX_IMAGE_SIZE_BYTES:-2097152}
+      DEEPFACE_MAX_IMAGE_EDGE: ${DEEPFACE_MAX_IMAGE_EDGE:-1600}
+      DEEPFACE_WARMUP_ENABLED: ${DEEPFACE_WARMUP_ENABLED:-true}
+      DEEPFACE_WARMUP_MODEL_NAME: ${DEEPFACE_WARMUP_MODEL_NAME:-Facenet512}
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/health', timeout=3).read()\""]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - ttcs
+
   backend:
     build: ./backend
     image: ${DOCKER_REGISTRY:-ngtukien218}/ttcs-backend:${TAG:-latest}
@@ -60,7 +88,8 @@ services:
     ports:
       - "8080:8080"
     env_file:
-      - .env
+      - path: .env
+        required: false
     environment:
       POSTGRES_HOST: database
       POSTGRES_PORT: 5432
@@ -69,6 +98,8 @@ services:
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_PORT: 5672
       APP_SEEDER_ENABLED: true
+      AI_FACE_SERVICE_BASE_URL: http://ai-service:8000
+      AI_FACE_SERVICE_AUTH_TOKEN: ${AI_FACE_SERVICE_AUTH_TOKEN:-}
 
     depends_on:
       database:
@@ -76,6 +107,8 @@ services:
       redis:
         condition: service_healthy
       rabbitmq:
+        condition: service_healthy
+      ai-service:
         condition: service_healthy
     healthcheck:
       test: [ "CMD-SHELL", "wget -qO- http://localhost:8080/api/actuator/health | grep UP" ]
