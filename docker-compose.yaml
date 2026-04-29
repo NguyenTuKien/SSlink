@@ -2,6 +2,8 @@ services:
   database:
     image: postgres:alpine
     restart: always
+    ports:
+      - "5432:5432"
     volumes:
       - pg_data:/var/lib/postgresql
     env_file: .env
@@ -42,6 +44,20 @@ services:
     networks:
       - unipoint-network
 
+  opencv:
+    build: ./opencv
+    image: ${DOCKER_REGISTRY:-ghcr.io/nguyentukien}/unipoint-opencv:${TAG:-latest}
+    restart: always
+    env_file: .env
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/health', timeout=3).read()\""]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - unipoint-network
+
   backend:
     build: ./backend
     image: ${DOCKER_REGISTRY:-ghcr.io/nguyentukien}/unipoint-backend:${TAG:-latest}
@@ -53,6 +69,8 @@ services:
       redis:
         condition: service_healthy
       rabbitmq:
+        condition: service_healthy
+      opencv:
         condition: service_healthy
     healthcheck:
       test: [ "CMD-SHELL", "wget -qO- http://localhost:8080/api/actuator/health | grep UP" ]
@@ -84,6 +102,8 @@ services:
     restart: always
     env_file: .env
     command: tunnel --no-autoupdate run --token ${CLOUDFLARE_TUNNEL_TOKEN}
+    # depends_on:
+    #   - frontend
     networks:
       - unipoint-network
 

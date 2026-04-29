@@ -22,7 +22,7 @@ data:
   CORS_ALLOWED_ORIGINS: "{{ .Values.backend.environment.CORS_ALLOWED_ORIGINS }}"
   APP_SEEDER_ENABLED: "{{ .Values.backend.environment.APP_SEEDER_ENABLED }}"
   # OAuth2 & Device
-  APP_OAUTH2_REDIRECT_URL: "{{ .Values.backend.environment.OAUTH2_REDIRECT_URL }}"
+  SPRING_APP_OAUTH2_REDIRECT_URL: "{{ .Values.backend.environment.OAUTH2_REDIRECT_URL }}"
   SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_MICROSOFT_REDIRECT_URI: "{{ .Values.backend.environment.OAUTH2_REDIRECT_URI }}"
   DEVICE_SECURITY_COOKIE_NAME: "{{ .Values.backend.environment.DEVICE_COOKIE_NAME }}"
   DEVICE_SECURITY_COOKIE_SECURE: "{{ .Values.backend.environment.DEVICE_COOKIE_SECURE }}"
@@ -33,3 +33,5 @@ data:
   SPRING_MAIL_HOST: {{ .Values.backend.environment.MAIL_HOST | default "smtp.gmail.com" | quote }}
   SPRING_MAIL_PORT: {{ .Values.backend.environment.MAIL_PORT | default "587" | quote }}
   SPRING_MAIL_USERNAME: "{{ .Values.backend.environment.MAIL_USERNAME }}"
+  # AI Service Integration
+  FACE_INTEGRATION_BASE_URL: "{{ .Values.backend.environment.FACE_INTEGRATION_BASE_URL }}"

@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.opencv.name }}
+  labels:
+    {{- include "helm.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.opencv.service.type }}
+  ports:
+    - port: {{ .Values.opencv.service.port }}
+      targetPort: {{ .Values.opencv.service.port }}
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "helm.selectorLabels" . | nindent 4 }}

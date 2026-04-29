@@ -25,6 +25,14 @@
         <span className="material-symbols-outlined">group</span>
         <span className="text-[10px] font-medium">Sinh viên</span>
       </button>
+      <button
+        type="button"
+        onClick={() => onSelect("face-attendance")}
+        className={`flex flex-col items-center gap-1 ${activeFeature === "face-attendance" ? "text-primary" : "text-slate-400"}`}
+      >
+        <span className="material-symbols-outlined">face</span>
+        <span className="text-[10px] font-medium">Face</span>
+      </button>
       <button type="button" onClick={onLogout} className="flex flex-col items-center gap-1 text-slate-400">
         <span className="material-symbols-outlined">logout</span>
         <span className="text-[10px] font-medium">Đăng xuất</span>

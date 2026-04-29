@@ -125,3 +125,24 @@ management:
   endpoint:
     health:
       show-details: always
+
+
+face:
+  integration:
+    base-url: http://localhost:8000
+    auth-token: dummy_ai_face_service_auth_token
+    model-name: Facenet512
+    detector-backend: opencv
+    enforce-detection: true
+    connect-timeout-ms: 8000
+    read-timeout-ms: 15000
+    match-threshold: 0.72
+    min-probe-quality-score: 0.45
+    quality-strict-threshold: 0.65
+    low-quality-threshold-boost: 0.04
+    min-confidence-gap: 0.03
+    max-probe-faces-per-frame: 6
+    require-liveness: false
+    max-image-size-bytes: 2097152
+    profile-cache-ttl-seconds: 300
+    session-candidate-cache-ttl-seconds: 90

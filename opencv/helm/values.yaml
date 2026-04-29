@@ -1,0 +1,12 @@
+opencv:
+  name: ttcs-opencv
+  replicaCount: 1
+  image:
+    repository: ghcr.io/nguyentukien/ttcs-opencv
+    tag: latest
+    pullPolicy: Always
+  service:
+    type: ClusterIP
+    port: 8000
+  secrets:
+    AI_FACE_SERVICE_AUTH_TOKEN: "dummy_ai_face_service_auth_token"

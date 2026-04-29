@@ -39,6 +39,10 @@ backend:
     DEVICE_BINDING_TTL_MS: "604800000"
     JWT_EXPIRATION_MS: "86400000"
     JWT_REFRESH_EXPIRATION_MS: "604800000"
+    # AI Service Integration
+    FACE_INTEGRATION_BASE_URL: "http://ttcs-opencv:8000"
+    # Mail
+    MAIL_USERNAME: ""
   secrets:
     POSTGRES_PASSWORD: ttcs_2026
     REDIS_PASSWORD: TTCS_2026
@@ -47,3 +51,5 @@ backend:
     DEVICE_HMAC_SECRET: ChangeThisHMACSecretKeyForProduction
     MICROSOFT_CLIENT_ID: ""
     MICROSOFT_CLIENT_SECRET: ""
+    MAIL_APP_PASSWORD: ""
+    FACE_INTEGRATION_AUTH_TOKEN: ""

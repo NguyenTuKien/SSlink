@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: '{{ include "helm.fullname" . }}-deployment'
+  labels:
+    {{- include "helm.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.opencv.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "helm.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "helm.selectorLabels" . | nindent 8 }}
+    spec:
+      containers:
+        - name: opencv
+          image: "{{ .Values.opencv.image.repository }}:{{ .Values.opencv.image.tag }}"
+          imagePullPolicy: "{{ .Values.opencv.image.pullPolicy }}"
+          ports:
+            - containerPort: {{ .Values.opencv.service.port }}
+          envFrom:
+            - secretRef:
+                name: '{{ include "helm.fullname" . }}-secret'
+          startupProbe:
+            httpGet:
+              path: /health
+              port: {{ .Values.opencv.service.port }}
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            failureThreshold: 18
+            timeoutSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: {{ .Values.opencv.service.port }}
+            initialDelaySeconds: 0
+            periodSeconds: 15
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: {{ .Values.opencv.service.port }}
+            initialDelaySeconds: 0
+            periodSeconds: 10
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 3

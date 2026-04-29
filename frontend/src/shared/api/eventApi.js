@@ -96,7 +96,12 @@ export const eventApi = {
   },
 
   fetchEventAttendees: async (eventId, page = 0, size = 10) => {
-    const response = await authFetch(`${API_BASE_URL}/${eventId}/attendees?page=${page}&size=${size}`);
+    const response = await authFetch(
+      `${API_BASE_URL}/${eventId}/attendees?page=${page}&size=${size}&noCache=true`,
+      {
+        headers: { 'X-Bypass-Cache': 'true' },
+      },
+    );
     if (!response.ok) throw new Error('Không thể tải danh sách sinh viên check-in.');
     const data = await response.json();
 

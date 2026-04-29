@@ -10,28 +10,24 @@ import LecturerNotificationCenter from "../features/lecturer/components/Lecturer
 import LecturerSidebar from "../features/lecturer/components/LecturerSidebar";
 import LecturerStudentManagement from "../features/lecturer/components/LecturerStudentManagement";
 import LecturerTopHeader from "../features/lecturer/components/LecturerTopHeader";
+import LecturerFaceAttendancePanel from "../features/lecturer/components/LecturerFaceAttendancePanel";
+import LecturerFaceUpdateReviewPanel from "../features/lecturer/components/LecturerFaceUpdateReviewPanel";
 
 const SIDEBAR_ITEMS_BASE = [
   { key: "dashboard", label: "Tổng quan", icon: "dashboard" },
   { key: "notifications", label: "Thông báo", icon: "notifications" },
   { key: "events", label: "Sự kiện", icon: "calendar_today" },
+  { key: "face-attendance", label: "Điểm danh khuôn mặt", icon: "face" },
+  { key: "face-review", label: "Duyệt ảnh khuôn mặt", icon: "how_to_reg" },
   { key: "students", label: "Sinh viên", icon: "group" },
   { key: "evaluation", label: "Quản lý điểm rèn luyện", icon: "assignment_turned_in" },
 ];
-
-function LecturerPlaceholderPanel({ title, description }) {
-  return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-      <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100">{title}</h3>
-      <p className="mt-3 text-sm text-slate-500 dark:text-slate-400">{description}</p>
-    </section>
-  );
-}
 
 export default function LecturerPage() {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const [activeFeature, setActiveFeature] = useState("dashboard");
+  const [mountedFeatures, setMountedFeatures] = useState(() => new Set(["dashboard"]));
   const [shouldOpenCreateEventModal, setShouldOpenCreateEventModal] = useState(false);
   const [dashboardSummaryLoading, setDashboardSummaryLoading] = useState(true);
   const [dashboardSummary, setDashboardSummary] = useState({
@@ -44,6 +40,17 @@ export default function LecturerPage() {
     scoreDistribution: [],
     upcomingEvents: [],
   });
+
+  useEffect(() => {
+    setMountedFeatures((prev) => {
+      if (prev.has(activeFeature)) {
+        return prev;
+      }
+      const next = new Set(prev);
+      next.add(activeFeature);
+      return next;
+    });
+  }, [activeFeature]);
 
   useEffect(() => {
     let ignore = false;
@@ -79,7 +86,7 @@ export default function LecturerPage() {
     return () => {
       ignore = true;
     };
-  }, [activeFeature]);
+  }, []);
 
   const handleCreateEventFromOverview = () => {
     setShouldOpenCreateEventModal(true);
@@ -117,10 +124,10 @@ export default function LecturerPage() {
       Component: LecturerNotificationCenter,
       props: {},
     },
+    "face-attendance": { Component: LecturerFaceAttendancePanel, props: {} },
+    "face-review": { Component: LecturerFaceUpdateReviewPanel, props: {} },
   };
 
-  const { Component: FeatureComponent, props } =
-    featureComponents[activeFeature] || featureComponents.dashboard;
   const fullNameLabel = user?.displayName || "Lecturer";
   const userIdLabel = user?.profileCode || user?.userId || "---";
   const avatarLetter = (fullNameLabel || "L").slice(0, 1).toUpperCase();
@@ -134,7 +141,7 @@ export default function LecturerPage() {
     <div className="relative flex min-h-screen w-full flex-col overflow-x-hidden bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-display">
       <LecturerTopHeader onLogout={handleLogout} />
 
-      <div className="flex flex-1 pt-16">
+      <main className="flex-1 flex flex-col md:flex-row">
         <LecturerSidebar
           items={SIDEBAR_ITEMS_BASE}
           activeFeature={activeFeature}
@@ -143,15 +150,21 @@ export default function LecturerPage() {
           userIdLabel={userIdLabel}
           avatarLetter={avatarLetter}
         />
-        <main className="flex-1">
-          <div className="p-4 md:p-8 pb-20 md:pb-8">
-            <FeatureComponent {...props} />
-          </div>
-        </main>
-      </div>
+        <div className="flex-1 w-full p-4 md:p-8 pb-20 md:pb-8">
+          {Object.entries(featureComponents)
+            .filter(([key]) => mountedFeatures.has(key))
+            .map(([key, value]) => {
+              const FeatureComponent = value.Component;
+              return (
+                <div key={key} className={key === activeFeature ? "block" : "hidden"} aria-hidden={key !== activeFeature}>
+                  <FeatureComponent {...value.props} />
+                </div>
+              );
+            })}
+        </div>
+      </main>
 
       <LecturerMobileNav activeFeature={activeFeature} onSelect={handleFeatureSelect} onLogout={handleLogout} />
     </div>
   );
 }
-

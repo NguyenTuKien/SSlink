@@ -87,6 +87,8 @@ jobs:
         run: helm lint ./backend/helm
       - name: Lint Frontend Helm Chart
         run: helm lint ./frontend/helm
+      - name: Lint OpenCV Helm Chart
+        run: helm lint ./opencv/helm
 
   tag_job:
     name: Get Image Tag
@@ -146,6 +148,12 @@ jobs:
           docker build --cache-from $REGISTRY_IMAGE/unipoint-frontend:$TAG -t $REGISTRY_IMAGE/unipoint-frontend:$TAG ./frontend
           docker push $REGISTRY_IMAGE/unipoint-frontend:$TAG
 
+      - name: Build and Push OpenCV
+        run: |
+          docker pull $REGISTRY_IMAGE/unipoint-opencv:$TAG || true
+          docker build --cache-from $REGISTRY_IMAGE/unipoint-opencv:$TAG -t $REGISTRY_IMAGE/unipoint-opencv:$TAG ./opencv
+          docker push $REGISTRY_IMAGE/unipoint-opencv:$TAG
+
       - name: Cleanup Docker System
         if: always() 
         run: docker system prune -af
@@ -193,6 +201,8 @@ jobs:
           docker image tag $REGISTRY_IMAGE/unipoint-backend:$TAG unipoint-backend:latest
           docker pull $REGISTRY_IMAGE/unipoint-frontend:$TAG
           docker image tag $REGISTRY_IMAGE/unipoint-frontend:$TAG unipoint-frontend:latest
+          docker pull $REGISTRY_IMAGE/unipoint-opencv:$TAG
+          docker image tag $REGISTRY_IMAGE/unipoint-opencv:$TAG unipoint-opencv:latest
 
       - name: Start services with Docker Compose
         run: |
@@ -302,6 +312,13 @@ jobs:
           severity: 'HIGH,CRITICAL'
           exit-code: '0'
 
+      - name: Run Trivy vulnerability scanner - OpenCV Image
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: '${{ env.REGISTRY_IMAGE }}/unipoint-opencv:${{ env.TAG }}'
+          severity: 'HIGH,CRITICAL'
+          exit-code: '0'
+
   update_config:
     name: Update Config
     needs: [tag_job, helm_lint_job, integration_test_job]
@@ -332,18 +349,26 @@ jobs:
       - name: Update Config Tag for Staging
         run: |
           cd Config
-          BACKEND_TARGET_FILE="app/spring/values-prod.yaml"
+          BACKEND_TARGET_FILE="app/backend/values-prod.yaml"
           yq -i '.backend.image.tag = strenv(TAG)' "$BACKEND_TARGET_FILE"
 
-          FRONTEND_TARGET_FILE="app/react/values-prod.yaml"
+          FRONTEND_TARGET_FILE="app/frontend/values-prod.yaml"
           yq -i '.frontend.image.tag = strenv(TAG)' "$FRONTEND_TARGET_FILE"
+
+          OPENCV_TARGET_FILE="app/opencv/values-prod.yaml"
+          if [ -f "$OPENCV_TARGET_FILE" ]; then
+            yq -i '.opencv.image.tag = strenv(TAG)' "$OPENCV_TARGET_FILE"
+            git add "$OPENCV_TARGET_FILE"
+          else
+            echo "WARNING: OpenCV config file not found at $OPENCV_TARGET_FILE"
+          fi
           
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           
           git add "$BACKEND_TARGET_FILE"
           git add "$FRONTEND_TARGET_FILE"
-          git commit -m "CD: Update backend and frontend image tag to ${{ env.TAG }}" || echo "No changes to commit"
+          git commit -m "CD: Update backend, frontend and opencv image tag to ${{ env.TAG }}" || echo "No changes to commit"
           git push origin main --force
 
   notify_success:

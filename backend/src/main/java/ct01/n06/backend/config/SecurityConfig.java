@@ -1,5 +1,6 @@
 package ct01.n06.backend.config;
 
+import ct01.n06.backend.filter.ApiResponseCacheFilter;
 import ct01.n06.backend.filter.JwtAuthenticationFilter;
 import ct01.n06.backend.security.CustomOidcUserService;
 import ct01.n06.backend.util.HttpCookieOAuth2AuthorizationRequestRepository;
@@ -35,6 +36,7 @@ import java.util.List;
 public class SecurityConfig {
 
         private final JwtAuthenticationFilter jwtAuthenticationFilter;
+        private final ApiResponseCacheFilter apiResponseCacheFilter;
         private final HttpCookieOAuth2AuthorizationRequestRepository cookieAuthorizationRequestRepository;
         private final UserDetailsService userDetailsService;
         private final PasswordEncoder passwordEncoder;
@@ -75,7 +77,8 @@ public class SecurityConfig {
                                                 .successHandler(oAuth2LoginHandler)
                                                 .failureHandler(oAuth2LoginHandler))
                                 // 3. Đặt filter JWT lên trước
-                                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+                                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                                .addFilterAfter(apiResponseCacheFilter, JwtAuthenticationFilter.class);
 
                 return http.build();
         }
