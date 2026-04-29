@@ -33,3 +33,5 @@ data:
   SPRING_MAIL_HOST: {{ .Values.backend.environment.MAIL_HOST | default "smtp.gmail.com" | quote }}
   SPRING_MAIL_PORT: {{ .Values.backend.environment.MAIL_PORT | default "587" | quote }}
   SPRING_MAIL_USERNAME: "{{ .Values.backend.environment.MAIL_USERNAME }}"
+  # AI Service Integration
+  FACE_INTEGRATION_BASE_URL: "{{ .Values.backend.environment.FACE_INTEGRATION_BASE_URL }}"

@@ -141,7 +141,7 @@ export default function LecturerPage() {
     <div className="relative flex min-h-screen w-full flex-col overflow-x-hidden bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-display">
       <LecturerTopHeader onLogout={handleLogout} />
 
-      <main className="flex-1 md:ml-64">
+      <main className="flex-1 flex flex-col md:flex-row">
         <LecturerSidebar
           items={SIDEBAR_ITEMS_BASE}
           activeFeature={activeFeature}
@@ -150,7 +150,7 @@ export default function LecturerPage() {
           userIdLabel={userIdLabel}
           avatarLetter={avatarLetter}
         />
-        <div className="p-4 md:p-8 pb-20 md:pb-8">
+        <div className="flex-1 w-full p-4 md:p-8 pb-20 md:pb-8">
           {Object.entries(featureComponents)
             .filter(([key]) => mountedFeatures.has(key))
             .map(([key, value]) => {
