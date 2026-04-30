@@ -16,7 +16,7 @@ import ct01.n06.backend.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -49,7 +49,7 @@ public class AuthFacade {
     private final LecturerService lecturerService;
     private final StudentService studentService;
     private final TotpService totpService;
-    private final RedisTemplate<Object, Object> redisTemplate;
+    private final StringRedisTemplate redisTemplate;
     private final DeviceSecurityService deviceSecurityService;
 
     public LoginResponse login(LoginRequest request, String deviceId) {
@@ -79,7 +79,7 @@ public class AuthFacade {
             String refreshToken = jwtService.generateRefreshToken(subject);
 
             if (isDeviceLockEnforced(userEntity)) {
-                String redisKey = "user:" + subject + ":session";
+                String redisKey = "auth:session:" + subject;
 
                 // Chỉ khóa 1 thiết bị tại 1 thời điểm cho sinh viên.
                 Boolean locked = redisTemplate.opsForValue().setIfAbsent(
@@ -137,7 +137,7 @@ public class AuthFacade {
 
         if (isDeviceLockEnforced(userEntity)) {
             // Chỉ duy trì khóa session trên Redis cho sinh viên.
-            String redisKey = "user:" + username + ":session";
+            String redisKey = "auth:session:" + username;
             redisTemplate.opsForValue().set(
                     redisKey,
                     newAccessToken,
@@ -237,7 +237,7 @@ public class AuthFacade {
         }
 
         if (usernameToClear != null) {
-            String redisKey = "user:" + usernameToClear + ":session";
+            String redisKey = "auth:session:" + usernameToClear;
             Boolean deleted = redisTemplate.delete(redisKey);
             log.info("LOGOUT: Deleted Redis key '{}' -> result={}", redisKey, deleted);
         } else {

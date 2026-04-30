@@ -9,7 +9,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.core.Authentication;
@@ -35,7 +35,7 @@ public class OAuth2LoginHandler implements AuthenticationSuccessHandler, Authent
     private final JwtService jwtService;
     private final UserService userService;
     private final DeviceSecurityService deviceSecurityService;
-    private final RedisTemplate<Object, Object> redisTemplate;
+    private final StringRedisTemplate redisTemplate;
     private final RedirectStrategy redirectStrategy = new DefaultRedirectStrategy();
 
     @Value("${spring.app.oauth2.redirect.url:http://localhost:5173/oauth-success}")
@@ -68,7 +68,7 @@ public class OAuth2LoginHandler implements AuthenticationSuccessHandler, Authent
 
         if (isDeviceLockEnforced(userEntity)) {
             // Chỉ sinh viên bị giới hạn 1 phiên đăng nhập.
-            String redisKey = "user:" + userEntity.getUsername() + ":session";
+            String redisKey = "auth:session:" + userEntity.getUsername();
             Boolean locked = redisTemplate.opsForValue().setIfAbsent(redisKey, accessToken, refreshExpirationMs,
                     TimeUnit.MILLISECONDS);
             if (!Boolean.TRUE.equals(locked)) {

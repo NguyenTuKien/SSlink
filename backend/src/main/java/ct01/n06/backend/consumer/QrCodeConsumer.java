@@ -8,6 +8,7 @@ import ct01.n06.backend.dto.qrcode.QrCheckinMessage;
 import ct01.n06.backend.entity.AttendenceEntity;
 import ct01.n06.backend.entity.EventEntity;
 import ct01.n06.backend.entity.StudentEntity;
+import ct01.n06.backend.constant.QrCodeConstant;
 import ct01.n06.backend.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -74,7 +75,7 @@ public class QrCodeConsumer {
         }
 
         // Must match key format from QrCodeServiceImpl.performCheckin(...)
-        String finalDeviceLockKey = "event_device_checkin:" + eventId + ":" + normalizedDeviceId;
+        String finalDeviceLockKey = QrCodeConstant.REDIS_DEVICE_LOCK_PREFIX + eventId + ":" + normalizedDeviceId;
         String finalDeviceLockValue = studentId;
 
         log.info("Nhận message check-in: studentId={}, eventId={}, deviceId={}", studentId, eventId, normalizedDeviceId);

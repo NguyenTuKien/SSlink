@@ -29,8 +29,9 @@ import org.springframework.web.util.ContentCachingResponseWrapper;
 @RequiredArgsConstructor
 public class ApiResponseCacheFilter extends OncePerRequestFilter {
 
-  private static final String CACHE_KEY_PREFIX = "api:response:cache:";
+  private static final String CACHE_KEY_PREFIX = "api:cache:";
   private static final Pattern EVENT_ATTENDEES_PATH_PATTERN = Pattern.compile("^/v1/events/\\d+/attendees$");
+  private static final Pattern QR_GENERATE_PATH_PATTERN = Pattern.compile("^/v1/qrcode/generate$");
 
   private final StringRedisTemplate stringRedisTemplate;
   private final ObjectMapper objectMapper;
@@ -40,6 +41,9 @@ public class ApiResponseCacheFilter extends OncePerRequestFilter {
 
   @Value("${app.response-cache.ttl-seconds:45}")
   private long ttlSeconds;
+
+  @Value("${app.response-cache.qrcode-ttl-seconds:5}")
+  private long qrcodeTtlSeconds;
 
   @Value("${app.response-cache.max-body-bytes:524288}")
   private int maxBodyBytes;
@@ -66,6 +70,11 @@ public class ApiResponseCacheFilter extends OncePerRequestFilter {
 
     // Do not cache volatile check-in attendee list.
     if (EVENT_ATTENDEES_PATH_PATTERN.matcher(path).matches()) {
+      return true;
+    }
+
+    // Skip specifically for any qrcode related GET EXCEPT generation if any
+    if (path.contains("/qrcode/") && !QR_GENERATE_PATH_PATTERN.matcher(path).matches()) {
       return true;
     }
 
@@ -103,7 +112,7 @@ public class ApiResponseCacheFilter extends OncePerRequestFilter {
     ContentCachingResponseWrapper wrappedResponse = new ContentCachingResponseWrapper(response);
     try {
       filterChain.doFilter(request, wrappedResponse);
-      writeToCacheIfEligible(cacheKey, wrappedResponse);
+      writeToCacheIfEligible(request, cacheKey, wrappedResponse);
       wrappedResponse.setHeader("X-Redis-Cache", "MISS");
     } finally {
       wrappedResponse.copyBodyToResponse();
@@ -137,7 +146,7 @@ public class ApiResponseCacheFilter extends OncePerRequestFilter {
     }
   }
 
-  private void writeToCacheIfEligible(String cacheKey, ContentCachingResponseWrapper response) {
+  private void writeToCacheIfEligible(HttpServletRequest request, String cacheKey, ContentCachingResponseWrapper response) {
     if (ttlSeconds <= 0) {
       return;
     }
@@ -160,9 +169,19 @@ public class ApiResponseCacheFilter extends OncePerRequestFilter {
     String body = new String(bodyBytes, StandardCharsets.UTF_8);
     CachedHttpResponse payload = new CachedHttpResponse(status, contentType, body);
 
+    long finalTtl = ttlSeconds;
+    String path = request.getServletPath();
+    if (path != null && QR_GENERATE_PATH_PATTERN.matcher(path).matches()) {
+      finalTtl = qrcodeTtlSeconds;
+    }
+
+    if (finalTtl <= 0) {
+      return;
+    }
+
     try {
       String value = objectMapper.writeValueAsString(payload);
-      stringRedisTemplate.opsForValue().set(cacheKey, value, Duration.ofSeconds(ttlSeconds));
+      stringRedisTemplate.opsForValue().set(cacheKey, value, Duration.ofSeconds(finalTtl));
     } catch (JsonProcessingException ex) {
       log.warn("Cannot serialize API response cache payload for key={}", cacheKey, ex);
     } catch (RuntimeException ex) {
