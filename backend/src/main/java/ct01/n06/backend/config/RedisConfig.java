@@ -8,9 +8,17 @@ import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.data.redis.repository.configuration.EnableRedisRepositories;
 import org.springframework.data.redis.core.RedisKeyValueAdapter;
 
+import org.springframework.context.annotation.Profile;
+
 @Configuration
-@EnableRedisRepositories(enableKeyspaceEvents = RedisKeyValueAdapter.EnableKeyspaceEvents.ON_STARTUP)
 public class RedisConfig {
+
+    @Configuration
+    @Profile("!test")
+    @EnableRedisRepositories(enableKeyspaceEvents = RedisKeyValueAdapter.EnableKeyspaceEvents.ON_STARTUP)
+    public static class RedisRepositoryConfig {
+    }
+
     @Bean
     public StringRedisTemplate stringRedisTemplate(RedisConnectionFactory connectionFactory) {
         return new StringRedisTemplate(connectionFactory);
