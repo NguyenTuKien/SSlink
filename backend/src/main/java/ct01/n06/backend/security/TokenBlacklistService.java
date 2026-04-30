@@ -15,7 +15,7 @@ import java.util.Date;
 @RequiredArgsConstructor
 public class TokenBlacklistService {
 
-    private static final String BLACKLIST_PREFIX = "blacklist:";
+    private static final String BLACKLIST_PREFIX = "auth:blacklist:";
 
     private final StringRedisTemplate redisTemplate;
 

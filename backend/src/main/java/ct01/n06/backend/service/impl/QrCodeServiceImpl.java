@@ -7,6 +7,7 @@ import ct01.n06.backend.repository.QrCodeRepository;
 import ct01.n06.backend.repository.StudentRepository;
 import ct01.n06.backend.service.QrCodeService;
 import ct01.n06.backend.service.TotpService;
+import ct01.n06.backend.constant.QrCodeConstant;
 import ct01.n06.backend.dto.qrcode.CheckinByCodeRequest;
 import ct01.n06.backend.dto.qrcode.GenerateQrResponse;
 import ct01.n06.backend.dto.qrcode.ScanQrRequest;
@@ -19,6 +20,7 @@ import ct01.n06.backend.entity.StudentEntity;
 import ct01.n06.backend.exception.ApiException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -40,8 +42,13 @@ import org.slf4j.LoggerFactory;
 public class QrCodeServiceImpl implements QrCodeService {
 
     private static final Logger log = LoggerFactory.getLogger(QrCodeServiceImpl.class);
-    private static final String PIN_CODE_KEY_PREFIX = "PIN_";
-    private static final long PIN_CODE_TTL_SECONDS = 11L;
+
+    @Value("${app.qrcode.ttl-seconds:15}")
+    private long qrTtlSeconds;
+
+    @Value("${app.qrcode.pin-ttl-seconds:15}")
+    private long pinTtlSeconds;
+
     private static final long TOTP_REPLAY_TTL_SECONDS = 60L;
 
     private final QrCodeRepository qrCodeRepository;
@@ -63,7 +70,7 @@ public class QrCodeServiceImpl implements QrCodeService {
                 .eventId(eventId)
                 .pinCode(pinCode)
                 .bluetoothId(null)
-                .timeToLive(PIN_CODE_TTL_SECONDS) // 11 giây trên Redis (để buffer 1s cho mạng)
+                .timeToLive(qrTtlSeconds)
                 .build();
                 
         // Lưu vào Redis, cấu hình @TimeToLive sẽ tự động xóa sau TTL
@@ -73,7 +80,7 @@ public class QrCodeServiceImpl implements QrCodeService {
                 .qrToken(token)
                 .pinCode(pinCode)
                 .bluetoothId(null)
-                .timeToLive(10L) // Báo với frontend là 5s
+                .timeToLive(qrTtlSeconds)
                 .build();
     }
 
@@ -200,8 +207,8 @@ public class QrCodeServiceImpl implements QrCodeService {
         }
 
         // Yêu cầu 3: Ràng buộc Device - Event (Chống mượn máy điểm danh)
-        String finalDeviceLockKey = "event_device_checkin:" + event.getId() + ":" + deviceId;
-        Duration lockTtl = ttlDuration.plusHours(12); // Set ttl hợp lý: Bằng thời gian sự kiện + 12 tiếng
+        String finalDeviceLockKey = QrCodeConstant.REDIS_DEVICE_LOCK_PREFIX + event.getId() + ":" + deviceId;
+        Duration lockTtl = ttlDuration;
         
         Boolean finalLockAcquired = stringRedisTemplate.opsForValue()
                 .setIfAbsent(finalDeviceLockKey, student.getId(), lockTtl);
@@ -272,7 +279,7 @@ public class QrCodeServiceImpl implements QrCodeService {
             String pinCode = generate6DigitPin();
             String pinKey = buildPinKey(pinCode);
             Boolean registered = stringRedisTemplate.opsForValue()
-                    .setIfAbsent(pinKey, String.valueOf(eventId), Duration.ofSeconds(PIN_CODE_TTL_SECONDS));
+                    .setIfAbsent(pinKey, String.valueOf(eventId), Duration.ofSeconds(pinTtlSeconds));
             if (Boolean.TRUE.equals(registered)) {
                 return pinCode;
             }
@@ -281,10 +288,10 @@ public class QrCodeServiceImpl implements QrCodeService {
     }
 
     private String buildPinKey(String pinCode) {
-        return PIN_CODE_KEY_PREFIX + pinCode;
+        return QrCodeConstant.REDIS_PIN_PREFIX + pinCode;
     }
 
     private String buildTotpReplayKey(String studentUserId, Long eventId, long timeStep) {
-        return "totp:used:" + studentUserId + ":" + eventId + ":" + timeStep;
+        return QrCodeConstant.REDIS_TOTP_REPLAY_PREFIX + studentUserId + ":" + eventId + ":" + timeStep;
     }
 }

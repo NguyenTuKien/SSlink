@@ -17,7 +17,7 @@ import java.util.concurrent.TimeUnit;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@RedisHash("QrCode")
+@RedisHash("qrcode")
 public class QrCodeEntity {
 
     @Id
