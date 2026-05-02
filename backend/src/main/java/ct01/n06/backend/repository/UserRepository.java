@@ -18,4 +18,10 @@ public interface UserRepository extends JpaRepository<UserEntity, String> {
   boolean existsByEmailIgnoreCase(String email);
 
   boolean existsByUsernameIgnoreCase(String username);
+
+  @org.springframework.data.jpa.repository.Query("SELECT LOWER(u.email) FROM UserEntity u WHERE u.email IS NOT NULL")
+  java.util.Set<String> findAllEmailsLower();
+
+  @org.springframework.data.jpa.repository.Query("SELECT LOWER(u.username) FROM UserEntity u WHERE u.username IS NOT NULL")
+  java.util.Set<String> findAllUsernamesLower();
 }

@@ -1,5 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { apiRequest } from "../../../shared/api/http";
+import {
+    exportAdminStudentsExcel,
+    getAdminStudentImportBatchStatus,
+    importAdminStudentsExcel,
+} from "../../../api/adminUserExcelApi";
 
 const DEFAULT_FILTERS = {
     keyword: "",
@@ -22,9 +27,15 @@ const EMPTY_STATS = {
 };
 
 const EMPTY_FLASH = { type: "", message: "" };
+const IMPORT_POLL_INTERVAL_MS = 300;
+const IMPORT_POLL_MAX_ATTEMPTS = 300;
 
 function toSearchValue(value) {
     return String(value ?? "").toLowerCase();
+}
+
+function sleep(ms) {
+    return new Promise((resolve) => window.setTimeout(resolve, ms));
 }
 
 export function useAdminStudentWorkspace() {
@@ -70,7 +81,9 @@ export function useAdminStudentWorkspace() {
             } catch (error) {
                 setFlash({ type: "error", message: error.message });
             } finally {
-                if (!silent) setLoading(false);
+                if (!silent) {
+                    setLoading(false);
+                }
             }
         },
         [],
@@ -81,7 +94,9 @@ export function useAdminStudentWorkspace() {
 
         (async () => {
             await loadWorkspace();
-            if (!ignore) setLoading(false);
+            if (!ignore) {
+                setLoading(false);
+            }
         })();
 
         return () => {
@@ -197,6 +212,75 @@ export function useAdminStudentWorkspace() {
         [loadWorkspace],
     );
 
+    const importStudents = useCallback(
+        async (files) => {
+            setBusy(true);
+            try {
+                const fileList = Array.isArray(files) ? files.filter(Boolean) : [files].filter(Boolean);
+                if (!fileList.length) {
+                    throw new Error("Vui lòng chọn ít nhất một file để import.");
+                }
+
+                const file = fileList[0];
+                const formData = new FormData();
+                formData.append("file", file);
+
+                const enqueue = await importAdminStudentsExcel(formData);
+                const batchId = enqueue?.batchId;
+                if (!batchId) {
+                    throw new Error("Không thể khởi tạo queue import.");
+                }
+
+                let attempts = 0;
+                let batchStatus = null;
+                let currentSleep = 300; // Start fast for small files
+                while (attempts < IMPORT_POLL_MAX_ATTEMPTS) {
+                    batchStatus = await getAdminStudentImportBatchStatus(batchId);
+                    if (batchStatus?.status === "COMPLETED" || batchStatus?.status === "FAILED" || batchStatus?.status === "PARTIAL_SUCCESS") {
+                        break;
+                    }
+                    attempts += 1;
+                    await sleep(currentSleep);
+                    if (currentSleep < 1500) {
+                        currentSleep = Math.min(currentSleep * 1.5, 1500); // Backoff to 1.5s
+                    }
+                }
+
+                if (batchStatus?.status !== "COMPLETED" && batchStatus?.status !== "FAILED" && batchStatus?.status !== "PARTIAL_SUCCESS") {
+                    throw new Error("Queue import đang xử lý quá lâu, vui lòng kiểm tra lại sau.");
+                }
+
+                await loadWorkspace({ silent: true });
+
+                const importedCount = Number(batchStatus.importedCount || 0);
+                const skippedCount = Number(batchStatus.skippedCount || 0);
+                const errorMessages = batchStatus.errors || [];
+
+                if (batchStatus.status === "COMPLETED") {
+                    setFlash({ type: "success", message: `Thành công: Đã import ${importedCount} bản ghi.` });
+                } else if (batchStatus.status === "PARTIAL_SUCCESS") {
+                    setFlash({ type: "warning", message: `Hoàn tất một phần: Đã import ${importedCount}. Bỏ qua ${skippedCount}.` });
+                    if (errorMessages.length) {
+                        console.error("Lỗi Import:", errorMessages);
+                        setFlash({ type: "warning", message: `Import thành công ${importedCount}. Bỏ qua ${skippedCount}. Xem console để biết chi tiết.` });
+                    }
+                } else {
+                    setFlash({ type: "error", message: `Import thất bại: ${errorMessages.join(", ")}` });
+                }
+
+                return batchStatus;
+            } catch (error) {
+                setFlash({ type: "error", message: error.message });
+                throw error;
+            } finally {
+                setBusy(false);
+            }
+        },
+        [loadWorkspace],
+    );
+
+    const exportStudents = useCallback(async () => exportAdminStudentsExcel(), []);
+
     const selectedStudent = useMemo(
         () => rows.find((row) => row.studentId === selectedStudentId) || rows[0] || null,
         [rows, selectedStudentId],
@@ -216,6 +300,8 @@ export function useAdminStudentWorkspace() {
         createStudent,
         updateStudent,
         deleteStudent,
+        importStudents,
+        exportStudents,
         selectedStudentId,
         setSelectedStudentId,
         selectedStudent,

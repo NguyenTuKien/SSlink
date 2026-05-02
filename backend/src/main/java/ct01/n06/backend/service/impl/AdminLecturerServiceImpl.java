@@ -1,5 +1,6 @@
 package ct01.n06.backend.service.impl;
 
+import java.io.ByteArrayOutputStream;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -9,6 +10,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -88,7 +91,7 @@ public class AdminLecturerServiceImpl implements AdminLecturerService {
         .filter(lecturer -> {
           UserStatus userStatus = AdminServiceUtils.normalizeStatus(
               lecturer.getUserEntity().getStatus());
-          return statusFilter == null ? userStatus != UserStatus.DELETED : userStatus == statusFilter;
+          return statusFilter == null || userStatus == statusFilter;
         })
         .filter(lecturer -> matchesKeyword(lecturer, normalizedKeyword))
         .sorted(Comparator.comparing(LecturerEntity::getFullName, String.CASE_INSENSITIVE_ORDER))
@@ -286,6 +289,43 @@ public class AdminLecturerServiceImpl implements AdminLecturerService {
     userRepository.save(user);
   }
 
+
+  @Override
+  @Transactional(readOnly = true)
+  public byte[] exportLecturersExcel() {
+    List<AdminLecturerRowResponse> rows = getLecturers(null, null, null).lecturers();
+    try (XSSFWorkbook workbook = new XSSFWorkbook(); ByteArrayOutputStream output = new ByteArrayOutputStream()) {
+      var sheet = workbook.createSheet("Lecturers");
+
+      Row header = sheet.createRow(0);
+      String[] headers = {"lecturerCode", "fullName", "email", "facultyCode", "status", "classCodes", "username"};
+      for (int i = 0; i < headers.length; i++) {
+        header.createCell(i).setCellValue(headers[i]);
+      }
+
+      int rowIndex = 1;
+      for (AdminLecturerRowResponse row : rows) {
+        Row excelRow = sheet.createRow(rowIndex++);
+        excelRow.createCell(0).setCellValue(defaultValue(row.lecturerCode()));
+        excelRow.createCell(1).setCellValue(defaultValue(row.fullName()));
+        excelRow.createCell(2).setCellValue(defaultValue(row.email()));
+        excelRow.createCell(3).setCellValue(defaultValue(row.facultyCode()));
+        excelRow.createCell(4).setCellValue(defaultValue(row.status()));
+        excelRow.createCell(5).setCellValue(String.join(", ", row.classCodes() == null ? List.of() : row.classCodes()));
+        excelRow.createCell(6).setCellValue(defaultValue(row.username()));
+      }
+
+      for (int i = 0; i < headers.length; i++) {
+        sheet.autoSizeColumn(i);
+      }
+
+      workbook.write(output);
+      return output.toByteArray();
+    } catch (Exception ex) {
+      throw new ApiException(HttpStatus.INTERNAL_SERVER_ERROR, "Không thể xuất file Excel giảng viên.");
+    }
+  }
+
   private List<LecturerEntity> loadLecturers() {
     return lecturerRepository.findAllByUserEntity_Role(Role.ROLE_LECTURER);
   }
@@ -410,6 +450,49 @@ public class AdminLecturerServiceImpl implements AdminLecturerService {
     return sanitized.length() > 50 ? sanitized.substring(0, 50) : sanitized;
   }
 
+  private FacultyEntity resolveFaculty(
+      String facultyCode,
+      String facultyName,
+      Map<String, FacultyEntity> facultyByCode,
+      Map<String, FacultyEntity> facultyByName
+  ) {
+    if (StringUtils.hasText(facultyCode)) {
+      FacultyEntity byCode = facultyByCode.get(facultyCode.trim().toUpperCase(Locale.ROOT));
+      if (byCode != null) {
+        return byCode;
+      }
+    }
+    if (StringUtils.hasText(facultyName)) {
+      return facultyByName.get(facultyName.trim().toLowerCase(Locale.ROOT));
+    }
+    return null;
+  }
+
+  private List<Long> resolveClassIds(String classCodesRaw, Map<String, ClassEntity> classByCode) {
+    if (!StringUtils.hasText(classCodesRaw)) {
+      return List.of();
+    }
+
+    List<Long> classIds = new ArrayList<>();
+    String[] tokens = classCodesRaw.split("[,;\\n]");
+    for (String token : tokens) {
+      if (!StringUtils.hasText(token)) {
+        continue;
+      }
+      ClassEntity classEntity = classByCode.get(token.trim().toUpperCase(Locale.ROOT));
+      if (classEntity == null) {
+        throw new ApiException(HttpStatus.BAD_REQUEST, "Không tìm thấy lớp theo mã " + token.trim() + ".");
+      }
+      classIds.add(classEntity.getId());
+    }
+    return classIds.stream().distinct().toList();
+  }
+
+
+  private String defaultValue(String value) {
+    return value == null ? "" : value;
+  }
+
   private void validateCreateUniqueness(String email, String username, String lecturerCode) {
     if (userRepository.existsByEmailIgnoreCase(email)) {
       throw new ApiException(HttpStatus.CONFLICT, "Email đã tồn tại: " + email);
@@ -462,4 +545,3 @@ public class AdminLecturerServiceImpl implements AdminLecturerService {
     }
   }
 }
-

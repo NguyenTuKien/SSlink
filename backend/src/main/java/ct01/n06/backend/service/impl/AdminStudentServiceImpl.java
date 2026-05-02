@@ -1,13 +1,17 @@
 package ct01.n06.backend.service.impl;
 
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.io.ByteArrayOutputStream;
 
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -47,6 +51,12 @@ public class AdminStudentServiceImpl implements AdminStudentService {
   private final UserRepository userRepository;
   private final PasswordEncoder passwordEncoder;
 
+  private final java.util.concurrent.ConcurrentHashMap<String, String> passwordHashCache = new java.util.concurrent.ConcurrentHashMap<>();
+
+  private String getCachedPasswordHash(String rawPassword) {
+    return passwordHashCache.computeIfAbsent(rawPassword, passwordEncoder::encode);
+  }
+
   @Override
   @Transactional(readOnly = true)
   public AdminStudentOptionsResponse getOptions() {
@@ -84,7 +94,7 @@ public class AdminStudentServiceImpl implements AdminStudentService {
         .filter(student -> classId == null || (student.getClassEntity() != null && Objects.equals(student.getClassEntity().getId(), classId)))
         .filter(student -> {
           UserStatus userStatus = AdminServiceUtils.normalizeStatus(student.getUserEntity().getStatus());
-          return statusFilter == null ? userStatus != UserStatus.DELETED : userStatus == statusFilter;
+          return statusFilter == null || userStatus == statusFilter;
         })
         .filter(student -> matchesKeyword(student, normalizedKeyword))
         .toList();
@@ -197,7 +207,7 @@ public class AdminStudentServiceImpl implements AdminStudentService {
     UserEntity user = UserEntity.builder()
         .username(username)
         .email(email)
-        .password(passwordEncoder.encode(resolvePassword(request.password())))
+        .password(getCachedPasswordHash(resolvePassword(request.password())))
         .role(role)
         .status(status)
         .build();
@@ -289,6 +299,44 @@ public class AdminStudentServiceImpl implements AdminStudentService {
     userRepository.save(user);
   }
 
+
+  @Override
+  @Transactional(readOnly = true)
+  public byte[] exportStudentsExcel() {
+    List<AdminStudentRowResponse> rows = getStudents(null, null, null, null).students();
+    try (XSSFWorkbook workbook = new XSSFWorkbook(); ByteArrayOutputStream output = new ByteArrayOutputStream()) {
+      var sheet = workbook.createSheet("Students");
+
+      Row header = sheet.createRow(0);
+      String[] headers = {"studentCode", "fullName", "email", "classCode", "facultyCode", "role", "status", "username"};
+      for (int i = 0; i < headers.length; i++) {
+        header.createCell(i).setCellValue(headers[i]);
+      }
+
+      int rowIndex = 1;
+      for (AdminStudentRowResponse row : rows) {
+        Row excelRow = sheet.createRow(rowIndex++);
+        excelRow.createCell(0).setCellValue(defaultValue(row.studentCode()));
+        excelRow.createCell(1).setCellValue(defaultValue(row.fullName()));
+        excelRow.createCell(2).setCellValue(defaultValue(row.email()));
+        excelRow.createCell(3).setCellValue(defaultValue(row.classCode()));
+        excelRow.createCell(4).setCellValue(defaultValue(row.facultyCode()));
+        excelRow.createCell(5).setCellValue(defaultValue(row.role()));
+        excelRow.createCell(6).setCellValue(defaultValue(row.status()));
+        excelRow.createCell(7).setCellValue(defaultValue(row.username()));
+      }
+
+      for (int i = 0; i < headers.length; i++) {
+        sheet.autoSizeColumn(i);
+      }
+
+      workbook.write(output);
+      return output.toByteArray();
+    } catch (Exception ex) {
+      throw new ApiException(HttpStatus.INTERNAL_SERVER_ERROR, "Không thể xuất file Excel sinh viên.");
+    }
+  }
+
   private AdminStudentRowResponse toRow(StudentEntity student) {
     UserEntity user = student.getUserEntity();
     ClassEntity classEntity = student.getClassEntity();
@@ -356,6 +404,11 @@ public class AdminStudentServiceImpl implements AdminStudentService {
       sanitized = studentCode.toLowerCase(Locale.ROOT);
     }
     return sanitized.length() > 50 ? sanitized.substring(0, 50) : sanitized;
+  }
+
+
+  private String defaultValue(String value) {
+    return value == null ? "" : value;
   }
 
   private void validateUniqueness(String email, String username, String studentCode) {

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { apiRequest } from "../../../shared/api/http";
+import { exportAdminLecturersExcel } from "../../../api/adminUserExcelApi";
 
 const DEFAULT_FILTERS = {
     keyword: "",
@@ -20,9 +21,15 @@ const EMPTY_STATS = {
 };
 
 const EMPTY_FLASH = { type: "", message: "" };
+const IMPORT_POLL_INTERVAL_MS = 300;
+const IMPORT_POLL_MAX_ATTEMPTS = 300;
 
 function toSearchValue(value) {
     return String(value ?? "").toLowerCase();
+}
+
+function sleep(ms) {
+    return new Promise((resolve) => window.setTimeout(resolve, ms));
 }
 
 export function useAdminLecturerWorkspace() {
@@ -81,10 +88,9 @@ export function useAdminLecturerWorkspace() {
 
         (async () => {
             await loadWorkspace();
-            if (ignore) {
-                return;
+            if (!ignore) {
+                setLoading(false);
             }
-            setLoading(false);
         })();
 
         return () => {
@@ -199,6 +205,61 @@ export function useAdminLecturerWorkspace() {
         [loadWorkspace],
     );
 
+    const importLecturers = useCallback(
+        async (files) => {
+            setBusy(true);
+            try {
+                const fileList = Array.isArray(files) ? files.filter(Boolean) : [files].filter(Boolean);
+                if (!fileList.length) {
+                    throw new Error("Vui lòng chọn ít nhất một file để import.");
+                }
+
+                const file = fileList[0];
+                const formData = new FormData();
+                formData.append("file", file);
+
+                const enqueue = await apiRequest("/v1/admin/lecturers/import", {
+                    method: "POST",
+                    body: formData,
+                }, false);
+
+                const batchId = enqueue?.batchId;
+                if (!batchId) {
+                    throw new Error("Không thể khởi tạo queue import.");
+                }
+
+                let attempts = 0;
+                let batchStatus = null;
+                let currentInterval = IMPORT_POLL_INTERVAL_MS;
+
+                while (attempts < IMPORT_POLL_MAX_ATTEMPTS) {
+                    batchStatus = await apiRequest(`/v1/admin/lecturers/import/${batchId}`);
+                    if (["COMPLETED", "PARTIAL_SUCCESS", "FAILED"].includes(batchStatus?.status)) {
+                        break;
+                    }
+                    attempts += 1;
+                    await sleep(currentInterval);
+                    currentInterval = Math.min(currentInterval * 1.5, 1500);
+                }
+
+                if (!["COMPLETED", "PARTIAL_SUCCESS", "FAILED"].includes(batchStatus?.status)) {
+                    throw new Error("Queue import đang xử lý, vui lòng kiểm tra lại sau.");
+                }
+
+                await loadWorkspace({ silent: true });
+                return batchStatus;
+            } catch (error) {
+                setFlash({ type: "error", message: error.message });
+                throw error;
+            } finally {
+                setBusy(false);
+            }
+        },
+        [loadWorkspace],
+    );
+
+    const exportLecturers = useCallback(async () => exportAdminLecturersExcel(), []);
+
     const selectedLecturer = useMemo(
         () => rows.find((row) => row.lecturerId === selectedLecturerId) || rows[0] || null,
         [rows, selectedLecturerId],
@@ -219,6 +280,8 @@ export function useAdminLecturerWorkspace() {
         createLecturer,
         updateLecturer,
         deleteLecturer,
+        importLecturers,
+        exportLecturers,
         selectedLecturerId,
         setSelectedLecturerId,
         selectLecturer: setSelectedLecturerId,
