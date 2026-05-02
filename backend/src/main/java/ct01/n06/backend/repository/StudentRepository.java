@@ -51,4 +51,7 @@ public interface StudentRepository extends JpaRepository<StudentEntity, String> 
 
   @EntityGraph(attributePaths = {"userEntity", "classEntity"})
   Optional<StudentEntity> findById(String id);
+
+  @Query("SELECT LOWER(s.studentCode) FROM StudentEntity s WHERE s.studentCode IS NOT NULL")
+  java.util.Set<String> findAllStudentCodesLower();
 }

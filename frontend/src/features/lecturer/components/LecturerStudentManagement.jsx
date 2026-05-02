@@ -4,7 +4,7 @@ import { useAuth } from "../../../context/AuthContext";
 import { useLecturerData } from "../hooks/useLecturerData";
 import "../../../styles/LecturerStudentManagement.css";
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 20;
 
 const STATUS_FILTERS = [
   { value: "", label: "Tất cả trạng thái" },
@@ -57,6 +57,8 @@ export default function LecturerStudentManagement() {
 
   const [currentPage, setCurrentPage] = useState(1);
   const [busy, setBusy] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
+  const [importResult, setImportResult] = useState(null);
   const [showManualModal, setShowManualModal] = useState(false);
   const [manualForm, setManualForm] = useState(DEFAULT_MANUAL_FORM);
 
@@ -124,37 +126,69 @@ export default function LecturerStudentManagement() {
     }
   };
 
+  const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
   const handleImport = async (event) => {
     const file = event.target.files?.[0];
     if (!file) {
       return;
     }
 
-    setBusy(true);
+    setIsImporting(true);
     setFlash({ type: "", message: "" });
 
     try {
       const formData = new FormData();
       formData.append("file", file);
 
-      const result = await apiRequest(`/lecturer/students/import?lecturerId=${lecturerId}`, {
+      const enqueue = await apiRequest(`/lecturer/students/import?lecturerId=${lecturerId}`, {
         method: "POST",
         body: formData,
-      });
+      }, false);
 
-      const baseMessage = `Import thành công ${result.importedCount}, bỏ qua ${result.skippedCount}.`;
-      const detailMessage = (result.errors || []).slice(0, 2).join(" ");
-      setFlash({
-        type: result.errors?.length ? "warning" : "success",
-        message: detailMessage ? `${baseMessage} ${detailMessage}` : baseMessage,
-      });
+      const batchId = enqueue?.batchId;
+      if (!batchId) {
+        throw new Error("Không thể khởi tạo queue import.");
+      }
+
+      let attempts = 0;
+      let batchStatus = null;
+      let currentInterval = 300;
+
+      while (attempts < 60) {
+        batchStatus = await apiRequest(`/lecturer/students/import/${batchId}?lecturerId=${lecturerId}`);
+        if (["COMPLETED", "PARTIAL_SUCCESS", "FAILED"].includes(batchStatus?.status)) {
+          break;
+        }
+        attempts += 1;
+        await sleep(currentInterval);
+        if (currentInterval < 1500) {
+          currentInterval = Math.min(currentInterval * 1.5, 1500);
+        }
+      }
+
+      if (!["COMPLETED", "PARTIAL_SUCCESS", "FAILED"].includes(batchStatus?.status)) {
+        throw new Error("Queue import đang xử lý, vui lòng kiểm tra lại sau.");
+      }
 
       await loadStudents();
+
+      const importedCount = Number(batchStatus.importedCount || 0);
+      const skippedCount = Number(batchStatus.skippedCount || 0);
+      const flattenedErrors = Array.isArray(batchStatus.errors) ? batchStatus.errors : [];
+
+      setImportResult({
+        importedCount,
+        skippedCount,
+        errors: flattenedErrors,
+        total: importedCount + skippedCount,
+      });
+
     } catch (err) {
       setFlash({ type: "error", message: err.message });
     } finally {
       event.target.value = "";
-      setBusy(false);
+      setIsImporting(false);
     }
   };
 
@@ -256,13 +290,19 @@ export default function LecturerStudentManagement() {
             <button type="button" className="btn-outline" onClick={handleExport}>
               Xuất Excel
             </button>
-            <button
-              type="button"
-              className="btn-outline danger"
-              onClick={() => fileInputRef.current?.click()}
-            >
-              Import Excel
-            </button>
+            {isImporting ? (
+              <button type="button" className="btn-outline danger" disabled>
+                <span className="spinner" style={{ marginRight: '8px' }}></span> Đang xử lý...
+              </button>
+            ) : (
+              <button
+                type="button"
+                className="btn-outline danger"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                Import Excel
+              </button>
+            )}
             <button type="button" className="btn-danger" onClick={() => setShowManualModal(true)}>
               Thêm thủ công
             </button>
@@ -503,16 +543,7 @@ export default function LecturerStudentManagement() {
             </tbody>
           </table>
 
-          <footer className="table-footer">
-            <span>
-              Hiển thị {(currentPage - 1) * PAGE_SIZE + (pageRows.length ? 1 : 0)} - {(currentPage - 1) * PAGE_SIZE + pageRows.length} trong tổng số {filteredCount} sinh viên
-            </span>
-            <div className="pagination">
-              <button type="button" onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))} disabled={currentPage === 1}>‹</button>
-              <span>{currentPage}</span>
-              <button type="button" onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))} disabled={currentPage === totalPages}>›</button>
-            </div>
-          </footer>
+
         </div>
 
         {/* Mobile pagination */}
@@ -610,6 +641,40 @@ export default function LecturerStudentManagement() {
               </button>
             </div>
           </form>
+        </div>
+      )}
+
+      {importResult && (
+        <div className="modal-mask">
+          <div className="modal-panel" style={{ maxWidth: "600px", width: "90%" }}>
+            <h3>Kết quả Import Excel</h3>
+            <div className="import-summary" style={{ marginBottom: "1rem", lineHeight: "1.6" }}>
+              <p>Đã xử lý: <strong>{importResult.total}</strong> dòng dữ liệu.</p>
+              <p style={{ color: "green" }}>Thành công: <strong>{importResult.importedCount}</strong>.</p>
+              <p style={{ color: "red" }}>Lỗi / Bỏ qua: <strong>{importResult.skippedCount}</strong>.</p>
+            </div>
+
+            {importResult.errors?.length > 0 && (
+              <div className="import-errors" style={{ maxHeight: "300px", overflowY: "auto", background: "#f8d7da", color: "#721c24", padding: "10px", borderRadius: "4px", fontSize: "14px", border: "1px solid #f5c6cb" }}>
+                <strong>Chi tiết lỗi:</strong>
+                <ul style={{ paddingLeft: "20px", marginTop: "10px", marginBottom: "0" }}>
+                  {importResult.errors.map((err, i) => (
+                    <li key={i}>{err}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            <div className="modal-actions" style={{ marginTop: "1.5rem", display: "flex", justifyContent: "flex-end" }}>
+              <button
+                type="button"
+                className="btn-danger"
+                onClick={() => setImportResult(null)}
+              >
+                Đóng
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </section>

@@ -6,7 +6,6 @@ import ct01.n06.backend.dto.admin.AdminLecturerOptionsResponse;
 import ct01.n06.backend.dto.admin.AdminLecturerRowResponse;
 import ct01.n06.backend.dto.admin.AdminLecturerStatsResponse;
 import ct01.n06.backend.dto.admin.AdminLecturerUpdateRequest;
-
 public interface AdminLecturerService {
 
   AdminLecturerOptionsResponse getOptions();
@@ -20,4 +19,7 @@ public interface AdminLecturerService {
   AdminLecturerRowResponse updateLecturer(String lecturerId, AdminLecturerUpdateRequest request);
 
   void deleteLecturer(String lecturerId);
+
+
+  byte[] exportLecturersExcel();
 }

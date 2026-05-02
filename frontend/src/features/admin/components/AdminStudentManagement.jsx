@@ -1,4 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+
+const PAGE_SIZE = 20;
 
 const STATUS_LABELS = {
     ACTIVE: "Hoạt động",
@@ -35,8 +37,33 @@ export default function AdminStudentManagement({ studentWorkspace, onNavigate })
         setSelectedStudentId,
         updateStudent,
         deleteStudent,
+        importStudents,
+        exportStudents,
     } = studentWorkspace;
+    const fileInputRef = useRef(null);
     const [isEditing, setIsEditing] = useState(false);
+    const [isImporting, setIsImporting] = useState(false);
+    const [importResult, setImportResult] = useState(null);
+    const [showErrors, setShowErrors] = useState(false);
+    const [currentPage, setCurrentPage] = useState(1);
+
+    const filteredCount = rows.length;
+    const totalPages = Math.max(1, Math.ceil(filteredCount / PAGE_SIZE));
+
+    const pageRows = useMemo(() => {
+        const startIndex = (currentPage - 1) * PAGE_SIZE;
+        return rows.slice(startIndex, startIndex + PAGE_SIZE);
+    }, [currentPage, rows]);
+
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [filters]);
+
+    useEffect(() => {
+        if (currentPage > totalPages) {
+            setCurrentPage(totalPages);
+        }
+    }, [currentPage, totalPages]);
     const [editForm, setEditForm] = useState({
         fullName: "",
         studentCode: "",
@@ -145,6 +172,36 @@ export default function AdminStudentManagement({ studentWorkspace, onNavigate })
         await deleteStudent(selectedStudent.studentId);
     };
 
+    const handleImportClick = () => fileInputRef.current?.click();
+
+    const handleImportFile = async (event) => {
+        const files = Array.from(event.target.files || []);
+        if (!files.length) {
+            return;
+        }
+        setIsImporting(true);
+        try {
+            const result = await importStudents(files);
+            if (result) {
+                setImportResult(result);
+                setShowErrors(false);
+            }
+        } finally {
+            setIsImporting(false);
+            event.target.value = "";
+        }
+    };
+
+    const handleExport = async () => {
+        const { blob, fileName } = await exportStudents();
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = fileName;
+        link.click();
+        window.URL.revokeObjectURL(url);
+    };
+
     if (loading) {
         return (
             <div className="grid min-h-[60vh] place-items-center rounded-2xl border border-slate-200 bg-white p-8 text-slate-500 shadow-sm">
@@ -158,18 +215,53 @@ export default function AdminStudentManagement({ studentWorkspace, onNavigate })
             <section className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm">
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
                     <div className="max-w-2xl space-y-2">
-                        <p className="text-xs font-semibold uppercase tracking-[0.25em] text-primary">Danh sách sinh viên</p>
+                        <p className="text-xl font-extrabold uppercase tracking-[0.2em] text-primary">Danh sách sinh viên</p>
                     </div>
 
-                    <button
-                        type="button"
-                        onClick={() => onNavigate?.("createStudent")}
-                        className="inline-flex items-center justify-center gap-2 rounded-2xl bg-primary px-4 py-3 text-sm font-bold text-white transition-transform hover:-translate-y-0.5"
-                    >
-                        <span className="material-symbols-outlined text-base">person_add</span>
-                        Thêm sinh viên
-                    </button>
+                    <div className="flex flex-wrap items-center justify-end gap-2">
+                        {isImporting ? (
+                            <div className="inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-primary shadow-sm">
+                                <span className="material-symbols-outlined text-base animate-spin">progress_activity</span>
+                                Đang xử lý...
+                            </div>
+                        ) : null}
+                        <button
+                            type="button"
+                            onClick={handleExport}
+                            disabled={busy || isImporting}
+                            className="inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-700 transition hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            <span className="material-symbols-outlined text-base">download</span>
+                            Xuất Excel
+                        </button>
+                        <button
+                            type="button"
+                            onClick={handleImportClick}
+                            disabled={busy || isImporting}
+                            className="inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-700 transition hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            <span className="material-symbols-outlined text-base">upload</span>
+                            Import Excel
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => onNavigate?.("createStudent")}
+                            className="inline-flex items-center justify-center gap-2 rounded-2xl bg-primary px-4 py-3 text-sm font-bold text-white transition-transform hover:-translate-y-0.5"
+                        >
+                            <span className="material-symbols-outlined text-base">person_add</span>
+                            Thêm sinh viên
+                        </button>
+                    </div>
                 </div>
+
+                <input
+                    ref={fileInputRef}
+                    type="file"
+                    hidden
+                    multiple
+                    accept=".xlsx,.xls"
+                    onChange={handleImportFile}
+                />
 
                 {flash.message ? (
                     <div className={`mt-5 rounded-2xl border px-4 py-3 text-sm ${flash.type === "error" ? "border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-900/30 dark:bg-rose-900/10 dark:text-rose-200" : "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/30 dark:bg-emerald-900/10 dark:text-emerald-200"}`}>
@@ -244,7 +336,7 @@ export default function AdminStudentManagement({ studentWorkspace, onNavigate })
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100">
-                                {rows.length > 0 ? rows.map((student) => {
+                                {pageRows.length > 0 ? pageRows.map((student) => {
                                     const isSelected = selectedStudentId === student.studentId;
                                     return (
                                         <tr
@@ -275,13 +367,38 @@ export default function AdminStudentManagement({ studentWorkspace, onNavigate })
                                     );
                                 }) : (
                                     <tr>
-                                        <td className="px-6 py-10 text-sm text-slate-500" colSpan={5}>
+                                        <td className="px-6 py-10 text-center text-sm text-slate-500" colSpan={5}>
                                             Không có sinh viên nào phù hợp bộ lọc hiện tại.
                                         </td>
                                     </tr>
                                 )}
                             </tbody>
                         </table>
+
+                        <footer className="flex items-center justify-between border-t border-slate-100 px-6 py-4">
+                            <span className="text-sm text-slate-500">
+                                Hiển thị {(currentPage - 1) * PAGE_SIZE + (pageRows.length ? 1 : 0)} - {(currentPage - 1) * PAGE_SIZE + pageRows.length} trong tổng số {filteredCount} sinh viên
+                            </span>
+                            <div className="flex items-center gap-2">
+                                <button
+                                    type="button"
+                                    onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                                    disabled={currentPage === 1}
+                                    className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-50"
+                                >
+                                    ‹
+                                </button>
+                                <span className="text-sm font-semibold text-slate-700">{currentPage}</span>
+                                <button
+                                    type="button"
+                                    onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+                                    disabled={currentPage === totalPages}
+                                    className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-50"
+                                >
+                                    ›
+                                </button>
+                            </div>
+                        </footer>
                     </div>
                 </article>
 
@@ -437,6 +554,59 @@ export default function AdminStudentManagement({ studentWorkspace, onNavigate })
                                 className="rounded-2xl bg-emerald-600 px-4 py-2.5 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-60"
                             >
                                 {busy ? "Đang lưu..." : "Lưu thay đổi"}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            ) : null}
+
+            {importResult ? (
+                <div className="fixed inset-0 z-[80] grid place-items-center bg-slate-900/40 p-4">
+                    <div className="w-full max-w-lg rounded-3xl border border-slate-200 bg-white p-6 shadow-2xl">
+                        <div className="flex items-center justify-between gap-4">
+                            <div>
+                                <h3 className="text-xl font-black text-slate-900">Kết quả Import</h3>
+                                <p className="text-sm text-slate-500">Trạng thái xử lý danh sách sinh viên</p>
+                            </div>
+                        </div>
+
+                        <div className="mt-6 flex flex-col items-center gap-2">
+                            <div className="grid grid-cols-2 gap-4 w-full text-center">
+                                <div className="rounded-2xl bg-emerald-50 p-4 border border-emerald-100">
+                                    <p className="text-3xl font-black text-emerald-600">{importResult.importedCount || 0}</p>
+                                    <p className="text-xs font-bold uppercase text-emerald-700 mt-1">Thành công</p>
+                                </div>
+                                <div className={`rounded-2xl p-4 border ${importResult.skippedCount > 0 ? 'bg-amber-50 border-amber-100' : 'bg-slate-50 border-slate-100'}`}>
+                                    <p className={`text-3xl font-black ${importResult.skippedCount > 0 ? 'text-amber-600' : 'text-slate-600'}`}>{importResult.skippedCount || 0}</p>
+                                    <p className={`text-xs font-bold uppercase mt-1 ${importResult.skippedCount > 0 ? 'text-amber-700' : 'text-slate-500'}`}>Bỏ qua/Lỗi</p>
+                                </div>
+                            </div>
+                            
+                            {(importResult.errors?.length > 0) && (
+                                <button 
+                                    onClick={() => setShowErrors(!showErrors)}
+                                    className="mt-2 text-sm font-semibold text-primary underline"
+                                >
+                                    {showErrors ? "Ẩn chi tiết lỗi" : "Xem chi tiết lỗi"}
+                                </button>
+                            )}
+
+                            {showErrors && importResult.errors?.length > 0 && (
+                                <div className="mt-2 w-full max-h-48 overflow-y-auto rounded-xl bg-rose-50 border border-rose-100 p-3 text-sm text-rose-700 text-left space-y-1">
+                                    {importResult.errors.map((err, idx) => (
+                                        <p key={idx} className="border-b border-rose-100 pb-1 last:border-0 last:pb-0">• {err}</p>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="mt-6 flex justify-end">
+                            <button
+                                type="button"
+                                onClick={() => setImportResult(null)}
+                                className="rounded-2xl bg-primary px-6 py-2.5 text-sm font-bold text-white transition hover:bg-primary-dark"
+                            >
+                                Xác nhận
                             </button>
                         </div>
                     </div>

@@ -31,4 +31,7 @@ public interface LecturerRepository extends JpaRepository<LecturerEntity, String
   int countByUserEntity_Status(UserStatus status);
 
   boolean existsByLecturerCodeIgnoreCase(String lecturerCode);
+
+  @org.springframework.data.jpa.repository.Query("SELECT LOWER(l.lecturerCode) FROM LecturerEntity l WHERE l.lecturerCode IS NOT NULL")
+  java.util.Set<String> findAllLecturerCodesLower();
 }

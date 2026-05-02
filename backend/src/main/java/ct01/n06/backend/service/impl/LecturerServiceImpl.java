@@ -13,23 +13,14 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
-
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.DataFormatter;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
-import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
-import org.springframework.web.multipart.MultipartFile;
 
 import ct01.n06.backend.dto.common.SimpleMessageResponse;
-import ct01.n06.backend.dto.lecturer.ImportStudentsResponse;
 import ct01.n06.backend.dto.lecturer.LecturerDashboardSummaryResponse;
 import ct01.n06.backend.dto.lecturer.LecturerStudentListResponse;
 import ct01.n06.backend.dto.lecturer.LecturerStudentOptionsResponse;
@@ -258,76 +249,6 @@ public class LecturerServiceImpl implements LecturerService {
     return toRow(student, Map.of(), Map.of(), 0);
   }
 
-  @Override
-  @Transactional
-  public ImportStudentsResponse importStudents(String lecturerId, MultipartFile file) {
-    if (file == null || file.isEmpty()) {
-      throw new ApiException(HttpStatus.BAD_REQUEST, "Vui lòng chọn file Excel để import.");
-    }
-
-    ensureLecturerExists(lecturerId);
-
-    int importedCount = 0;
-    int skippedCount = 0;
-    List<String> errors = new ArrayList<>();
-
-    Map<String, ClassEntity> classByCode = classRepository.findByLecturerEntityId(lecturerId).stream()
-        .collect(Collectors.toMap(
-            classEntity -> classEntity.getClassCode().toUpperCase(Locale.ROOT),
-            classEntity -> classEntity
-        ));
-
-    if (classByCode.isEmpty()) {
-      throw new ApiException(HttpStatus.BAD_REQUEST, "Giảng viên chưa được phân lớp để import.");
-    }
-
-    DataFormatter formatter = new DataFormatter();
-    try (InputStream inputStream = file.getInputStream();
-        Workbook workbook = WorkbookFactory.create(inputStream)) {
-      Sheet sheet = workbook.getSheetAt(0);
-      for (int rowIndex = 1; rowIndex <= sheet.getLastRowNum(); rowIndex++) {
-        Row row = sheet.getRow(rowIndex);
-        if (row == null || isEmptyRow(row, formatter)) {
-          continue;
-        }
-
-        String studentCode = getCellValue(row.getCell(0), formatter);
-        String fullName = getCellValue(row.getCell(1), formatter);
-        String email = getCellValue(row.getCell(2), formatter);
-        String classCode = getCellValue(row.getCell(3), formatter);
-        String username = getCellValue(row.getCell(4), formatter);
-        String password = getCellValue(row.getCell(5), formatter);
-
-        if (!StringUtils.hasText(studentCode) || !StringUtils.hasText(fullName)
-            || !StringUtils.hasText(email) || !StringUtils.hasText(classCode)) {
-          skippedCount++;
-          errors.add("Dòng " + (rowIndex + 1)
-              + ": Thiếu cột bắt buộc (studentCode, fullName, email, classCode).");
-          continue;
-        }
-
-        ClassEntity classEntity = classByCode.get(classCode.trim().toUpperCase(Locale.ROOT));
-        if (classEntity == null) {
-          skippedCount++;
-          errors.add("Dòng " + (rowIndex + 1) + ": Class code không thuộc giảng viên (" + classCode
-              + ").");
-          continue;
-        }
-
-        try {
-          createStudentRecord(classEntity, fullName, email, studentCode, username, password, true);
-          importedCount++;
-        } catch (ApiException ex) {
-          skippedCount++;
-          errors.add("Dòng " + (rowIndex + 1) + ": " + ex.getMessage());
-        }
-      }
-    } catch (Exception ex) {
-      throw new ApiException(HttpStatus.BAD_REQUEST, "Không đọc được file Excel: " + ex.getMessage());
-    }
-
-    return new ImportStudentsResponse(importedCount, skippedCount, errors);
-  }
 
   @Override
   @Transactional
@@ -776,16 +697,6 @@ public class LecturerServiceImpl implements LecturerService {
     }
   }
 
-  private boolean isEmptyRow(Row row, DataFormatter formatter) {
-    for (int i = 0; i <= 5; i++) {
-      Cell cell = row.getCell(i);
-      if (StringUtils.hasText(getCellValue(cell, formatter))) {
-        return false;
-      }
-    }
-    return true;
-  }
-
     @Override
     public LecturerEntity getLecturerByUser(UserEntity userEntity) {
         return lecturerRepository.findByUserEntity(userEntity).orElseThrow();
@@ -797,13 +708,6 @@ public class LecturerServiceImpl implements LecturerService {
             .orElseThrow(() -> new ResourceNotFoundException("Lecturer profile for user: " + username));
       }
 
-  private String getCellValue(Cell cell, DataFormatter formatter) {
-    if (cell == null) {
-      return "";
-    }
-    String value = formatter.formatCellValue(cell);
-    return value == null ? "" : value.trim();
-  }
 }
 
 

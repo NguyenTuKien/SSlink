@@ -113,7 +113,7 @@ export default function AdminSemesterManagement() {
   };
 
   const handleDelete = async (id, name) => {
-    if (!window.confirm(`Xác nhận xóa học kỳ "${name}"? Hành động này không thể hoàn tác.`)) return;
+    if (!window.confirm(`Xóa học kỳ "${name}"? Hành động này không thể hoàn tác.`)) return;
     try {
       await deleteSemester(id);
       fetchSemesters({ force: true });
@@ -136,7 +136,7 @@ export default function AdminSemesterManagement() {
       {/* Page Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '28px' }}>
         <div>
-          <h1 style={{ fontSize: '24px', fontWeight: 700, color: '#1e293b', margin: 0 }}>Quản lý Học kỳ</h1>
+          <h1 style={{ fontSize: '36px', fontWeight: 900, color: '#1e293b', margin: 0, letterSpacing: '0.04em', textTransform: 'uppercase' }}>Danh sách học kỳ</h1>
           <p style={{ marginTop: '6px', fontSize: '14px', color: '#64748b' }}>
             Thiết lập thời gian học kỳ và thời gian đánh giá điểm rèn luyện.
           </p>

@@ -6,7 +6,6 @@ import ct01.n06.backend.dto.admin.AdminStudentOptionsResponse;
 import ct01.n06.backend.dto.admin.AdminStudentRowResponse;
 import ct01.n06.backend.dto.admin.AdminStudentStatsResponse;
 import ct01.n06.backend.dto.admin.AdminStudentUpdateRequest;
-
 public interface AdminStudentService {
 
   AdminStudentOptionsResponse getOptions();
@@ -20,4 +19,7 @@ public interface AdminStudentService {
   AdminStudentRowResponse updateStudent(String studentId, AdminStudentUpdateRequest request);
 
   void deleteStudent(String studentId);
+
+
+  byte[] exportStudentsExcel();
 }
