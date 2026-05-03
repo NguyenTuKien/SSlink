@@ -146,3 +146,8 @@ face:
     max-image-size-bytes: 2097152
     profile-cache-ttl-seconds: 300
     session-candidate-cache-ttl-seconds: 90
+
+cloudinary:
+  cloud-name: ""
+  api-key: ""
+  api-secret: ""

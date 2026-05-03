@@ -12,6 +12,7 @@ import LecturerStudentManagement from "../features/lecturer/components/LecturerS
 import LecturerTopHeader from "../features/lecturer/components/LecturerTopHeader";
 import LecturerFaceAttendancePanel from "../features/lecturer/components/LecturerFaceAttendancePanel";
 import LecturerFaceUpdateReviewPanel from "../features/lecturer/components/LecturerFaceUpdateReviewPanel";
+import LecturerQuizManagement from "../features/lecturer/components/LecturerQuizManagement";
 
 const SIDEBAR_ITEMS_BASE = [
   { key: "dashboard", label: "Tổng quan", icon: "dashboard" },
@@ -21,6 +22,7 @@ const SIDEBAR_ITEMS_BASE = [
   { key: "face-review", label: "Duyệt ảnh khuôn mặt", icon: "how_to_reg" },
   { key: "students", label: "Sinh viên", icon: "group" },
   { key: "evaluation", label: "Quản lý điểm rèn luyện", icon: "assignment_turned_in" },
+  { key: "quizzes", label: "Thi & Ôn tập", icon: "quiz" },
 ];
 
 export default function LecturerPage() {
@@ -74,7 +76,6 @@ export default function LecturerPage() {
           });
         }
       } catch {
-        // Keep zero fallback when dashboard summary cannot be loaded.
       } finally {
         if (!ignore) {
           setDashboardSummaryLoading(false);
@@ -126,6 +127,7 @@ export default function LecturerPage() {
     },
     "face-attendance": { Component: LecturerFaceAttendancePanel, props: {} },
     "face-review": { Component: LecturerFaceUpdateReviewPanel, props: {} },
+    quizzes: { Component: LecturerQuizManagement, props: {} },
   };
 
   const fullNameLabel = user?.displayName || "Lecturer";
