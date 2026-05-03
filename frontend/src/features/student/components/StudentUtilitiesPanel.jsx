@@ -5,6 +5,7 @@ const UTILITY_ITEMS = [
   { key: "statistics", label: "Thống kê", icon: "bar_chart" },
   { key: "evidence", label: "Khai báo minh chứng", icon: "verified_user" },
   { key: "face-profile", label: "Ảnh khuôn mặt", icon: "face" },
+  { key: "quizzes", label: "Bài Tập / Kiểm Tra", icon: "quiz" },
   { key: "evaluation", label: "Phiếu rèn luyện", icon: "assignment" },
 ];
 

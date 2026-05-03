@@ -34,6 +34,7 @@ function buildSidebarItems(isMonitor) {
     { key: "evidence", label: "Khai báo minh chứng", icon: "verified_user" },
     { key: "face-profile", label: "Ảnh khuôn mặt", icon: "face" },
     { key: "scan-qr", label: "Quét sự kiện", icon: "qr_code_scanner" },
+    { key: "quizzes", label: "Bài Tập / Kiểm Tra", icon: "quiz" },
     { key: "evaluation", label: "Phiếu rèn luyện", icon: "assignment" },
   ];
 
@@ -48,6 +49,7 @@ function buildSidebarItems(isMonitor) {
 }
 
 import MonitorClass from "../features/monitor/components/MonitorClass";
+import StudentQuizManagement from "../features/student/components/StudentQuizManagement";
 
 const FEATURE_COMPONENTS = {
   dashboard: StudentDashboard,
@@ -61,6 +63,7 @@ const FEATURE_COMPONENTS = {
   evidence: StudentEvidenceDeclarationPanel,
   "face-profile": StudentFaceProfilePanel,
   utilities: StudentUtilitiesPanel,
+  quizzes: StudentQuizManagement,
 };
 
 export default function StudentPage() {

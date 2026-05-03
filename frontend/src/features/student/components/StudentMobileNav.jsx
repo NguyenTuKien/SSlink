@@ -8,6 +8,7 @@ const UTILITIES_FEATURES = new Set([
   "manage-class",
   "face-profile",
   "utilities",
+  "quizzes",
 ]);
 
 export default function StudentMobileNav({ activeFeature, onSelect, unreadCount = 0 }) {
