@@ -94,7 +94,8 @@ export async function apiRequest(path, options = {}) {
 
   let response;
   try {
-    const fetchFn = isTauri ? tauriFetch : fetch;
+    const isFormData = options.body instanceof FormData;
+    const fetchFn = (isTauri && !isFormData) ? tauriFetch : fetch;
     response = await fetchFn(url, {
       method: options.method || "GET",
       ...options,
@@ -147,7 +148,8 @@ export async function apiBinaryRequest(path, options = {}) {
 
   let response;
   try {
-    const fetchFn = isTauri ? tauriFetch : fetch;
+    const isFormData = options.body instanceof FormData;
+    const fetchFn = (isTauri && !isFormData) ? tauriFetch : fetch;
     response = await fetchFn(url, {
       method: options.method || "GET",
       ...options,
