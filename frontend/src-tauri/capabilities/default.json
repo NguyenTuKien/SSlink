@@ -8,22 +8,6 @@
   "permissions": [
     "core:default",
     "notification:default",
-    "opener:default",
-    {
-      "identifier": "http:default",
-      "allow": [
-        {
-          "url": "https://unipoint.ngtukien.id.vn/api/*"
-        }
-      ]
-    },
-    {
-      "identifier": "http:allow-fetch",
-      "allow": [
-        {
-          "url": "https://unipoint.ngtukien.id.vn/api/*"
-        }
-      ]
-    }
+    "http:default"
   ]
 }
