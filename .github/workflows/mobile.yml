@@ -66,10 +66,20 @@ jobs:
           gradle_file = Path("src-tauri/gen/android/app/build.gradle.kts")
           text = gradle_file.read_text()
 
-          imports = "import java.io.FileInputStream\nimport java.util.Properties\n"
+          # Xóa các import cũ để tránh bị duplicate
+          lines = text.splitlines()
+          lines = [
+              line for line in lines
+              if line.strip() not in {
+                  "import java.io.FileInputStream",
+                  "import java.util.Properties",
+              }
+          ]
 
-          if "import java.io.FileInputStream" not in text:
-              text = imports + text
+          text = "\n".join(lines)
+
+          # Thêm import lại đúng 1 lần
+          text = "import java.io.FileInputStream\nimport java.util.Properties\n" + text
 
           signing_config = """
               signingConfigs {
@@ -99,7 +109,7 @@ jobs:
                   1
               )
 
-          gradle_file.write_text(text)
+          gradle_file.write_text(text + "\n")
           PY
 
       - name: Build Android APK
