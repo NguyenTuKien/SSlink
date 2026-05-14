@@ -7,7 +7,7 @@ on:
 
 jobs:
   # ==========================================
-  # 🤖 JOB 1: BUILD ANDROID (Chạy trên Ubuntu)
+  # 🤖 JOB 1: BUILD ANDROID
   # ==========================================
   build-android:
     runs-on: ubuntu-24.04
@@ -29,7 +29,7 @@ jobs:
       - name: Install Frontend Dependencies
         run: npm ci
 
-      - name: Setup Java (JDK 17)
+      - name: Setup Java JDK 17
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
@@ -45,28 +45,77 @@ jobs:
         with:
           workspaces: frontend/src-tauri
 
+      - name: Init Android Project
+        env:
+          NDK_HOME: ${{ env.ANDROID_NDK_LATEST_HOME }}
+        run: |
+          npx tauri android init
+
+      - name: Setup Android Signing
+        run: |
+          cd src-tauri/gen/android
+
+          echo "keyAlias=${{ secrets.ANDROID_KEY_ALIAS }}" > keystore.properties
+          echo "password=${{ secrets.ANDROID_KEY_PASSWORD }}" >> keystore.properties
+
+          echo "${{ secrets.ANDROID_KEY_BASE64 }}" | base64 -d > $RUNNER_TEMP/upload-keystore.jks
+          echo "storeFile=$RUNNER_TEMP/upload-keystore.jks" >> keystore.properties
+
+      - name: Patch Gradle Signing Config
+        run: |
+          GRADLE_FILE="src-tauri/gen/android/app/build.gradle.kts"
+
+          if ! grep -q "import java.io.FileInputStream" "$GRADLE_FILE"; then
+            sed -i '1i import java.io.FileInputStream\nimport java.util.Properties' "$GRADLE_FILE"
+          fi
+
+          if ! grep -q 'create("release")' "$GRADLE_FILE"; then
+            sed -i '/android {/a\
+    signingConfigs {\
+        create("release") {\
+            val keystorePropertiesFile = rootProject.file("keystore.properties")\
+            val keystoreProperties = Properties()\
+            if (keystorePropertiesFile.exists()) {\
+                keystoreProperties.load(FileInputStream(keystorePropertiesFile))\
+            }\
+            keyAlias = keystoreProperties["keyAlias"] as String\
+            keyPassword = keystoreProperties["password"] as String\
+            storeFile = file(keystoreProperties["storeFile"] as String)\
+            storePassword = keystoreProperties["password"] as String\
+        }\
+    }\
+' "$GRADLE_FILE"
+          fi
+
+          if ! grep -q 'signingConfig = signingConfigs.getByName("release")' "$GRADLE_FILE"; then
+            sed -i '/getByName("release") {/a\
+            signingConfig = signingConfigs.getByName("release")\
+' "$GRADLE_FILE"
+          fi
+
       - name: Build Android APK
         env:
           NDK_HOME: ${{ env.ANDROID_NDK_LATEST_HOME }}
           VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
         run: |
-          npx tauri android init
           npx tauri android build
 
       - name: Upload Android APK
         uses: actions/upload-artifact@v4
         with:
           name: app-android-apk
-          path: frontend/src-tauri/gen/android/app/build/outputs/apk/**/*.apk
+          path: |
+            frontend/src-tauri/gen/android/app/build/outputs/apk/**/*.apk
 
   # ==========================================
-  # 🍎 JOB 2: BUILD IOS (Bắt buộc chạy trên macOS)
+  # 🍎 JOB 2: BUILD IOS
   # ==========================================
   build-ios:
     runs-on: macos-latest
     defaults:
       run:
         working-directory: ./frontend
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -94,7 +143,7 @@ jobs:
       - name: Select Xcode
         run: sudo xcode-select -switch /Applications/Xcode.app
 
-      - name: Build iOS App (Simulator)
+      - name: Build iOS App Simulator
         env:
           VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL || 'http://localhost:3000' }}
           APPLE_DEVELOPMENT_TEAM: "1234567890"

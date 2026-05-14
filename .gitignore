@@ -3,3 +3,5 @@
 /thanh-nien-ptit-api
 **/application.yaml
 **/application-prod.yaml
+**/upload-keystore.jks
+**/upload-keystore.base64
