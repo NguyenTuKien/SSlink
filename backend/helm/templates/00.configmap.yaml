@@ -36,3 +36,5 @@ data:
   # AI Service Integration
   FACE_INTEGRATION_BASE_URL: "{{ .Values.backend.environment.FACE_INTEGRATION_BASE_URL }}"
   MANAGEMENT_HEALTH_MAIL_ENABLED: "{{ .Values.backend.environment.MANAGEMENT_HEALTH_MAIL_ENABLED | default "true" }}"
+  # Cloudinary
+  CLOUDINARY_CLOUD_NAME: "{{ .Values.backend.environment.CLOUDINARY_CLOUD_NAME }}"
