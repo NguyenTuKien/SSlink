@@ -92,7 +92,7 @@ export default function AuthFormBlock() {
     <div className="w-full max-w-[480px] bg-white dark:bg-slate-900 shadow-xl rounded-2xl p-8 border border-primary/5">
       <div className="text-center mb-8">
         <h1 className="text-slate-900 dark:text-slate-100 text-3xl font-bold leading-tight mb-2">Chào mừng trở lại</h1>
-        <p className="text-slate-500 dark:text-slate-400 text-base font-normal">Tiếp tục hành trình tri thức cùng Điểm rèn luyện</p>
+        <p className="text-slate-500 dark:text-slate-400 text-base font-normal">Tiếp tục hành trình tri thức cùng UniPoint</p>
       </div>
 
       {error && (
@@ -174,7 +174,7 @@ export default function AuthFormBlock() {
         <a className="underline hover:text-[#d23232]" href="#">
           Chính sách bảo mật
         </a>{' '}
-        của Điểm rèn luyện.
+        của UniPoint.
       </p>
     </div>
   );

@@ -7,7 +7,7 @@ const LoginHeader = () => (
       <div className="size-8 bg-white rounded-lg flex items-center justify-center overflow-hidden border border-primary/10">
         <img src="/logo.png" alt="Logo" className="h-full w-full object-cover" />
       </div>
-      <h2 className="text-xl font-bold leading-tight tracking-[-0.015em]">Điểm rèn luyện</h2>
+      <h2 className="text-xl font-bold leading-tight tracking-tight">UniPoint</h2>
     </div>
     <div className="flex gap-4">
       <button className="hidden md:flex min-w-[84px] cursor-pointer items-center justify-center rounded-lg h-10 px-4 border border-primary/20 text-primary dark:text-slate-100 text-sm font-bold" type="button">
@@ -31,7 +31,7 @@ const AuthLoginPage = () => {
             <AuthFormBlock />
           </main>
 
-          <footer className="py-6 text-center text-slate-400 dark:text-slate-500 text-sm">© 2024 Điểm rèn luyện Ecosystem. All rights reserved.</footer>
+          <footer className="py-6 text-center text-slate-400 dark:text-slate-500 text-sm">© 2024 UniPoint Ecosystem. All rights reserved.</footer>
         </div>
       </div>
     </div>
