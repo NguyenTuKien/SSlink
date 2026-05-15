@@ -3,7 +3,7 @@ export default function StudentTopHeader({ fullNameLabel, userIdLabel, avatarLet
     <header className="sticky top-0 z-50 flex items-center justify-between border-b border-primary/10 bg-white px-3 py-3 dark:bg-background-dark/50 sm:px-4 md:px-10">
       <div className="flex items-center gap-2 text-primary sm:gap-4">
         <div className="size-8 flex items-center justify-center bg-white rounded-lg overflow-hidden border border-primary/10">
-          <img src="/image.png" alt="Logo" className="h-full w-full object-cover" />
+          <img src="/logo.png" alt="Logo" className="h-full w-full object-cover" />
         </div>
         <h2 className="text-base font-bold leading-tight tracking-tight text-slate-900 dark:text-slate-100 sm:text-lg">UniPoint</h2>
       </div>
