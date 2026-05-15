@@ -21,15 +21,15 @@ function formatPercent(value) {
 
 function OpsKpiCard({ label, value, icon, hint, tone }) {
   return (
-    <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-transform hover:-translate-y-0.5 hover:shadow-md dark:border-slate-800 dark:bg-slate-900">
-      <div className="flex items-center justify-between gap-4">
-        <div>
-          <p className="text-sm font-medium text-slate-500 dark:text-slate-400">{label}</p>
-          <h3 className="mt-2 text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-100">{value}</h3>
-          <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">{hint}</p>
+    <article className="rounded-2xl border border-slate-200 bg-white p-4 md:p-5 shadow-sm transition-transform hover:-translate-y-0.5 hover:shadow-md dark:border-slate-800 dark:bg-slate-900">
+      <div className="flex items-center justify-between gap-3 md:gap-4">
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-xs font-medium text-slate-500 md:text-sm dark:text-slate-400">{label}</p>
+          <h3 className="mt-1 text-2xl font-bold tracking-tight text-slate-900 md:mt-2 md:text-3xl dark:text-slate-100">{value}</h3>
+          <p className="mt-1 line-clamp-1 text-[10px] text-slate-500 md:mt-2 md:text-xs dark:text-slate-400">{hint}</p>
         </div>
-        <div className={`flex h-12 w-12 items-center justify-center rounded-2xl ${tone}`}>
-          <span className="material-symbols-outlined text-2xl">{icon}</span>
+        <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl md:h-12 md:w-12 md:rounded-2xl ${tone}`}>
+          <span className="material-symbols-outlined text-xl md:text-2xl">{icon}</span>
         </div>
       </div>
     </article>
@@ -104,21 +104,21 @@ export default function AdminDashboard({ workspace, onNavigate }) {
     .slice(0, 5);
 
   return (
-    <div className="space-y-6">
-      <section className="overflow-hidden rounded-[28px] border border-rose-100 bg-gradient-to-r from-white via-rose-50 to-orange-50 p-6 text-slate-900 shadow-sm">
-        <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
-          <div className="max-w-2xl space-y-4">
-            <span className="inline-flex items-center gap-2 rounded-full border border-rose-200 bg-white px-4 py-1.5 text-sm font-bold uppercase tracking-[0.2em] text-primary">
-              <span className="material-symbols-outlined text-base">admin_panel_settings</span>
+    <div className="space-y-4 md:space-y-6">
+      <section className="overflow-hidden rounded-2xl md:rounded-[28px] border border-rose-100 bg-gradient-to-r from-white via-rose-50 to-orange-50 p-4 md:p-6 text-slate-900 shadow-sm">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          <div className="max-w-2xl space-y-4 text-center lg:text-left">
+            <span className="inline-flex items-center gap-2 rounded-full border border-rose-200 bg-white px-3 py-1.5 text-xs md:text-sm font-bold uppercase tracking-wider text-primary">
+              <span className="material-symbols-outlined text-sm md:text-base">admin_panel_settings</span>
               Admin Operations Dashboard
             </span>
           </div>
 
-          <div className="grid w-full gap-3 sm:w-auto sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid w-full gap-2 sm:w-auto sm:grid-cols-2 lg:grid-cols-3">
             <button
               type="button"
               onClick={() => onNavigate?.("students")}
-              className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-base font-bold text-slate-900 transition-transform hover:-translate-y-0.5 hover:border-primary/30"
+              className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-bold text-slate-900 transition-transform hover:-translate-y-0.5 hover:border-primary/30 sm:px-4 sm:py-3 sm:text-base"
             >
               <span className="material-symbols-outlined text-lg">groups</span>
               Xử lý sinh viên
@@ -126,7 +126,7 @@ export default function AdminDashboard({ workspace, onNavigate }) {
             <button
               type="button"
               onClick={() => onNavigate?.("lecturers")}
-              className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-base font-bold text-slate-900 transition-transform hover:-translate-y-0.5 hover:border-primary/30"
+              className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-bold text-slate-900 transition-transform hover:-translate-y-0.5 hover:border-primary/30 sm:px-4 sm:py-3 sm:text-base"
             >
               <span className="material-symbols-outlined text-lg">badge</span>
               Xử lý giảng viên
@@ -134,7 +134,7 @@ export default function AdminDashboard({ workspace, onNavigate }) {
             <button
               type="button"
               onClick={() => onNavigate?.("semesters")}
-              className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-base font-bold text-slate-900 transition-transform hover:-translate-y-0.5 hover:border-primary/30"
+              className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-bold text-slate-900 transition-transform hover:-translate-y-0.5 hover:border-primary/30 sm:px-4 sm:py-3 sm:text-base"
             >
               <span className="material-symbols-outlined text-lg">date_range</span>
               Quản lý học kỳ
