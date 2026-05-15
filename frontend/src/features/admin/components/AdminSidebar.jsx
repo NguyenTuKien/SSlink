@@ -11,8 +11,8 @@ export default function AdminSidebar({
   return (
     <aside className="fixed inset-y-0 left-0 z-40 hidden w-72 flex-col border-r border-slate-200 bg-white/95 p-4 backdrop-blur-md md:flex">
       <div className="flex items-center gap-3 px-2 py-2.5">
-        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-rose-500 text-white shadow-lg shadow-primary/20">
-          <span className="material-symbols-outlined text-2xl">admin_panel_settings</span>
+        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white overflow-hidden shadow-lg">
+          <img src="/image.png" alt="Logo" className="h-full w-full object-cover" />
         </div>
         <div>
           <h1 className="text-xl font-black tracking-tight text-slate-900">UniPoint Admin</h1>

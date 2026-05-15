@@ -2,8 +2,8 @@ export default function LecturerTopHeader({ onLogout }) {
   return (
     <header className="sticky top-0 z-50 flex h-16 items-center justify-between border-b border-slate-200 bg-white px-4 dark:border-slate-800 dark:bg-slate-900 md:px-8">
       <div className="flex items-center gap-3">
-        <div className="rounded-lg bg-primary p-1.5 text-white">
-          <span className="material-symbols-outlined text-xl">school</span>
+        <div className="rounded-lg bg-white p-1 overflow-hidden border border-slate-200">
+          <img src="/image.png" alt="Logo" className="h-6 w-6 object-cover" />
         </div>
         <div className="flex flex-col">
           <h1 className="text-base font-bold leading-tight tracking-tight text-primary md:text-lg">UniPoint</h1>

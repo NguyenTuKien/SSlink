@@ -4,8 +4,8 @@ import AuthFormBlock from '../features/auth/components/AuthFormBlock';
 const LoginHeader = () => (
   <header className="flex items-center justify-between whitespace-nowrap border-b border-solid border-primary/10 px-6 md:px-20 py-4 bg-white dark:bg-slate-900">
     <div className="flex items-center gap-3 text-primary dark:text-slate-100">
-      <div className="size-8 bg-primary rounded-lg flex items-center justify-center text-white">
-        <span className="material-symbols-outlined text-2xl">school</span>
+      <div className="size-8 bg-white rounded-lg flex items-center justify-center overflow-hidden border border-primary/10">
+        <img src="/image.png" alt="Logo" className="h-full w-full object-cover" />
       </div>
       <h2 className="text-xl font-bold leading-tight tracking-[-0.015em]">Điểm rèn luyện</h2>
     </div>
